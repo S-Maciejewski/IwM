@@ -11,11 +11,11 @@ iterations = 360
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
 
 ax1.set_title("Object")
-ax1.imshow(img)
+ax1.imshow(img, cmap=plt.cm.Greys_r)
 
 angle = np.linspace(0., 180., iterations, endpoint=False)
 sinogram = radon(img, theta=angle, circle=True)
 ax2.set_title("Sinogram")
-ax2.imshow(sinogram)
+ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
 
 plt.show()
