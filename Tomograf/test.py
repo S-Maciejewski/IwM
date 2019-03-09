@@ -9,6 +9,7 @@ def calculateValues(emitter, detectors):
         for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
             print('Pixel ', i, ' with value ', img[i[0], i[1]])
             value += img[i[0], i[1]]
+            # img[i[0], i[1]] = 1
         print('Sum ', value, ', avg ', value/img.shape[0])
     else:
         pass
@@ -47,20 +48,23 @@ def addPadding(img):
     return result
 
 
-img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
+img = np.zeros([10, 10], dtype=np.uint8)
 
-ax1.set_title("Original image")
+img = addPadding(img)
+# img[:, :] = 1
+# print(' '.join(map(str, img)))
+# print(img.shape)
+# img[0, 0] = 1
+img[:, 5] = 0.25  # img[:][5] = 1
+img[5, :] = 0.5
+img[7, :] = 1
+
+calculateValues([0,0], [[9, 9]])
+
+fig, (ax1) = plt.subplots(1, 1, figsize=(10, 10))
+
+ax1.set_xlim(0, img.shape[0] - 1)
+ax1.set_ylim(0, img.shape[1] - 1)
 ax1.imshow(img, cmap=plt.cm.Greys_r)
-
-iterations = 360
-angle = np.linspace(0., 180., iterations, endpoint=False)
-# sinogram
-# ax2.set_title("Sinogram")
-# ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
-
-# invertedSinogram
-# ax3.set_title("Inverted")
-# ax3.imshow(invertedSinogram, cmap=plt.cm.Greys_r)
 
 plt.show()
