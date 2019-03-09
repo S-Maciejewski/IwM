@@ -3,16 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def calculateValues(emitter, detectors):
-    value = 0
-    if len(detectors) == 1:
-        for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
-            print('Pixel ', i, ' with value ', img[i[0], i[1]])
-            value += img[i[0], i[1]]
-            # img[i[0], i[1]] = 1
-        print('Sum ', value, ', avg ', value/img.shape[0])
-    else:
-        pass
+def addPadding(img):
+    result = np.zeros([max(img.shape), max(img.shape)])
+    result[:img.shape[0], :img.shape[1]] = img
+    return result
 
 
 def bresenhamGenerator(x0, y0, x1, y1):
@@ -42,15 +36,34 @@ def bresenhamGenerator(x0, y0, x1, y1):
         D += 2*dy
 
 
-def addPadding(img):
-    result = np.zeros([max(img.shape), max(img.shape)])
-    result[:img.shape[0], :img.shape[1]] = img
-    return result
+def calculateValues(emitter, detectors):
+    if len(detectors) == 1:
+        value = 0
+        for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
+            print('Pixel ', i, ' with value ', img[i[0], i[1]])
+            value += img[i[0], i[1]]
+        print('Sum ', value, ', avg ', value/img.shape[0])
+        return value / img.shape[0]
+    else:
+        values = []
+        for det in detectors:
+            value = 0
+            for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
+                value += img[i[0], i[1]]
+                values.append(value / img.shape[0])
+        return values
 
 
-img = np.zeros([10, 10], dtype=np.uint8)
+img = addPadding(np.zeros([10, 10], dtype=np.uint8))
 
-img = addPadding(img)
+# Zmienne sterujące
+# n
+detectors = 10 
+# l (deg)
+detectorsAngularDistance = 2
+iterations = 180
+angle = np.linspace(0., 180., iterations, endpoint=False)
+
 # img[:, :] = 1
 # print(' '.join(map(str, img)))
 # print(img.shape)
@@ -59,7 +72,7 @@ img[:, 5] = 0.25  # img[:][5] = 1
 img[5, :] = 0.5
 img[7, :] = 1
 
-calculateValues([0,0], [[9, 9]])
+calculateValues([0, 0], [[9, 9]])
 
 fig, (ax1) = plt.subplots(1, 1, figsize=(10, 10))
 

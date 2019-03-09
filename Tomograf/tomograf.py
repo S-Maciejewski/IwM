@@ -3,15 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def calculateValues(emitter, detectors):
-    value = 0
-    if len(detectors) == 1:
-        for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
-            print('Pixel ', i, ' with value ', img[i[0], i[1]])
-            value += img[i[0], i[1]]
-        print('Sum ', value, ', avg ', value/img.shape[0])
-    else:
-        pass
+def addPadding(img):
+    result = np.zeros([max(img.shape), max(img.shape)])
+    result[:img.shape[0], :img.shape[1]] = img
+    return result
 
 
 def bresenhamGenerator(x0, y0, x1, y1):
@@ -41,20 +36,39 @@ def bresenhamGenerator(x0, y0, x1, y1):
         D += 2*dy
 
 
-def addPadding(img):
-    result = np.zeros([max(img.shape), max(img.shape)])
-    result[:img.shape[0], :img.shape[1]] = img
-    return result
+def calculateValues(emitter, detectors):
+    if len(detectors) == 1:
+        value = 0
+        for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
+            # print('Pixel ', i, ' with value ', img[i[0], i[1]])
+            value += img[i[0], i[1]]
+        # print('Sum ', value, ', avg ', value/img.shape[0])
+        return value / img.shape[0]
+    else:
+        values = []
+        for det in detectors:
+            value = 0
+            for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
+                value += img[i[0], i[1]]
+                values.append(value / img.shape[0])
+        return values
 
 
 img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
 
+# Zmienne sterujące
+# n
+detectors = 10 
+# l (deg)
+detectorsAngularDistance = 2
+iterations = 180
+angle = np.linspace(0., 180., iterations, endpoint=False)
+
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
 ax1.set_title("Original image")
 ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-iterations = 360
-angle = np.linspace(0., 180., iterations, endpoint=False)
 # sinogram
 # ax2.set_title("Sinogram")
 # ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
