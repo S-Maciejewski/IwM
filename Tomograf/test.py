@@ -54,6 +54,9 @@ def calculateValues(emitter, detectors):
         return values
 
 
+def getDetectorPositions(emitter):
+    positions = []
+
 img = addPadding(np.zeros([10, 10], dtype=np.uint8))
 
 # Zmienne sterujące
