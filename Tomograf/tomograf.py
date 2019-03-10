@@ -106,7 +106,7 @@ def getSinogram():
 
 
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
-img = addPadding(data.imread("slp.png", as_gray=True))
+img = addPadding(data.imread("slp256.png", as_gray=True))
 # img = addPadding(np.zeros([512, 512], dtype=np.uint8))
 # img = addPadding(np.zeros([50, 200], dtype=np.uint8))
 
@@ -131,13 +131,14 @@ ax1.imshow(img, cmap=plt.cm.Greys_r)
 print(len(sinogram), ', ', len(sinogram[0]))
 # print(type(sinogram), type(sinogram[0]))
 sinogram = np.array(sinogram)
+# sinogram = np.array(sinogram).transpose()
 print(type(sinogram), type(sinogram[0]), type(sinogram[0][0]))
 
-# print(sinogram)
-# print(img)
+print('Sinogram: ', sinogram)
+print('Img: ', img)
 
 ax2.set_title("Sinogram")
-ax2.imshow(img, cmap=plt.cm.Greys_r)
+ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
 
 # invertedSinogram
 # ax3.set_title("Inverted")
