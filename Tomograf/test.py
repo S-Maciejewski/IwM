@@ -4,7 +4,8 @@ import numpy as np
 
 
 def addPadding(img):
-    result = np.zeros([max(img.shape), max(img.shape)])
+    result = np.zeros([max(img.shape), max(img.shape)]) if max(img.shape) % 2 == 1 else np.zeros(
+        [max(img.shape) + 1, max(img.shape) + 1])
     result[:img.shape[0], :img.shape[1]] = img
     return result
 
@@ -29,58 +30,123 @@ def bresenhamGenerator(x0, y0, x1, y1):
     y = 0
 
     for x in range(dx + 1):
-        yield x0 + x*xx + y*yx, y0 + x*xy + y*yy
+        yield [x0 + x*xx + y*yx, y0 + x*xy + y*yy]
         if D >= 0:
             y += 1
             D -= 2*dx
         D += 2*dy
 
 
-def calculateValues(emitter, detectors):
-    if len(detectors) == 1:
+def markVisited(emitter, detectors):
+    for det in detectors:
+        passed = 0
+        for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
+            passed += 1
+            img[i[0], i[1]] = 1
+        # print('Passed pixels: ', passed)
+
+
+def getValues(emitter, detectors):
+    values = []
+    for det in detectors:
         value = 0
-        for i in bresenhamGenerator(emitter[0], emitter[1], detectors[0][0], detectors[0][1]):
-            print('Pixel ', i, ' with value ', img[i[0], i[1]])
+        for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
             value += img[i[0], i[1]]
-        print('Sum ', value, ', avg ', value/img.shape[0])
-        return value / img.shape[0]
+        values.append(np.float64(value / img.shape[0]))
+    return values
+
+
+def project(pos):
+    p = [0, 0]
+    if pos[0] >= 0 and pos[0] < img.shape[0]:
+        p[0] = pos[0]
+    elif pos[0] >= 0:
+        p[0] = img.shape[0] - 1
     else:
-        values = []
-        for det in detectors:
-            value = 0
-            for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
-                value += img[i[0], i[1]]
-                values.append(value / img.shape[0])
-        return values
+        0
+    if pos[1] >= 0 and pos[1] < img.shape[0]:
+        p[1] = pos[1]
+    elif pos[1] >= 0:
+        p[1] = img.shape[0] - 1
+    else:
+        0
+    return p
 
 
-def getDetectorPositions(emitter):
+def getPositions(ang):  # TODO
+    # print('angle: ', ang)
+    ang = np.deg2rad(ang)
     positions = []
+    # r = img.shape[0] / 2
+    r = img.shape[0] * np.sqrt(2) / 2
+    center = int(img.shape[0] / 2)
+    # positions.append(project([int(r * np.cos(ang)), int(r * np.sin(ang))]))
+    positions.append(
+        project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
+    #   int(r * np.sin(ang)) + center])
+    # print('Emitter: ', positions[0])
+    # img[positions[0][0], positions[0][1]] = 0.25 # Zaznacz pozycje emitera
+    if detectors > 1:
+        for i in range(detectors):
+            # position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))),
+                        # int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1)))]
+            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
+            positions.append(project(position))
+    return positions
 
-img = addPadding(np.zeros([10, 10], dtype=np.uint8))
 
-# Zmienne sterujące
+def getSinogram():
+    sinogram = []
+    angles = np.linspace(0., 180., iterations, endpoint=False)
+    for ang in angles:
+        positions = getPositions(ang)
+        # print('Positions: ', positions[1:])
+
+        markVisited(positions[0], positions[1:])
+
+        # values = getValues(positions[0], positions[1:])
+        # sinogram.append(values)
+    return sinogram
+
+
+# img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
+img = addPadding(data.imread("slp256.png", as_gray=True))
+# img = addPadding(np.zeros([512, 512], dtype=np.uint8))
+# img = addPadding(np.zeros([50, 200], dtype=np.uint8))
+
+
+# Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
-detectors = 10 
+detectors = 128
 # l (deg)
-detectorsAngularDistance = 2
+detectorsAngle = 90
+# ilość pomiarów
 iterations = 180
-angle = np.linspace(0., 180., iterations, endpoint=False)
 
-# img[:, :] = 1
-# print(' '.join(map(str, img)))
-# print(img.shape)
-# img[0, 0] = 1
-img[:, 5] = 0.25  # img[:][5] = 1
-img[5, :] = 0.5
-img[7, :] = 1
+sinogram = getSinogram()
 
-calculateValues([0, 0], [[9, 9]])
-
-fig, (ax1) = plt.subplots(1, 1, figsize=(10, 10))
-
-ax1.set_xlim(0, img.shape[0] - 1)
-ax1.set_ylim(0, img.shape[1] - 1)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
+# fig, ax1 = plt.subplots(1, 1, figsize=(10, 10))
+ax1.set_title("Original image")
 ax1.imshow(img, cmap=plt.cm.Greys_r)
+# print('img: ', type(img), type(img[0]), type(img[0][0]))
+
+# print(sinogram)
+# print(len(sinogram), ', ', len(sinogram[0]))
+# print(type(sinogram), type(sinogram[0]))
+# sinogram = np.array(sinogram)
+# sinogram = np.array(sinogram).transpose()
+# print(type(sinogram), type(sinogram[0]), type(sinogram[0][0]))
+
+print('Sinogram: ', sinogram)
+print('Img: ', img)
+
+# ax2.set_title("Sinogram")
+# ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
+
+# invertedSinogram
+# ax3.set_title("Inverted")
+# ax3.imshow(invertedSinogram, cmap=plt.cm.Greys_r)
 
 plt.show()
