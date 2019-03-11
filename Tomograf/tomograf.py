@@ -41,14 +41,28 @@ def getValues(emitter, detectors):
     values = []
     for det in detectors:
         value = 0
+        processedPixels = 0
         for i in bresenhamGenerator(emitter[0], emitter[1], det[0], det[1]):
-            value += img[i[0], i[1]]
-            if debug:
-                markedImg[i[0], i[1]] = 1
-        values.append(np.float64(value / img.shape[0]))
+            if isValidPoint(i[0], i[1]):
+                value += img[i[0], i[1]]
+                processedPixels += 1
+                if debug:
+                    markedImg[i[0], i[1]] = 1
+        if processedPixels != 0:
+            values.append(np.float64(value / processedPixels))
+        else:
+            values.append(np.float64(0))
     return values
 
 
+def isValidPoint(x, y):
+    if x >= 0 and x < img.shape[0] and y >= 0 and y < img.shape[0]:
+        return True
+    else:
+        return False
+
+
+# Obsolete projection
 def project(pos):
     p = [0, 0]
     if pos[0] >= 0 and pos[0] < img.shape[0]:
@@ -66,18 +80,22 @@ def project(pos):
     return p
 
 
-def getPositions(ang):
-    ang = np.deg2rad(ang)
+def getPositions(angDeg):
+    ang = np.deg2rad(angDeg)
+    print('Angles: ', ang, angDeg)
     positions = []
     r = img.shape[0] * np.sqrt(2) / 2
     center = int(img.shape[0] / 2)
-    positions.append(
-        project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
+    # positions.append(
+    # project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
+    positions.append([int(r * np.cos(ang)) + center,
+                      int(r * np.sin(ang)) + center])
     if detectors > 1:
         for i in range(detectors):
             position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
                         int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
-            positions.append(project(position))
+            # positions.append(project(position))
+            positions.append(position)
     return positions
 
 
@@ -100,15 +118,15 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 
 # Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
-detectors = 128
+detectors = 8
 # l (deg)
-detectorsAngle = 10
+detectorsAngle = 30
 # Ilość pomiarów
-iterations = 180
+iterations = 30
 # Maksynalny kąt obrotu
-maxAng = 180.
+maxAng = 360.
 # Zaznaczanie odwiedzonych, printy itd.
-debug = False
+debug = True
 
 if debug:
     markedImg = img.copy()

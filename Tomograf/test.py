@@ -104,13 +104,24 @@ def getPositionsNN(ang):
     r = img.shape[0] * np.sqrt(2) / 2
     center = int(img.shape[0] / 2)
     if detectors > 1:
-        for i in range(detectors):
-            position = [int(r * np.cos(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
-            emittersList.append(project(position))
-            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center]
-            detectorsList.append(project(position))
+        emittersList.append(project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
+        detectorsList.append(project([int(-r * np.cos(ang)) + center, int(-r * np.sin(ang)) + center]))
+
+        for i in range(detectors - 1):
+            if i % 2 == 0:
+                position = [int(r * np.cos(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                            int(r * np.sin(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
+                emittersList.append(project(position))
+                position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center,
+                            int(r * np.sin(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center]
+                detectorsList.append(project(position))
+            else:
+                position = [int(r * np.cos(ang - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center,
+                            int(r * np.sin(ang - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center]
+                emittersList.append(project(position))
+                position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                            int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
+                detectorsList.append(project(position))
 
     positions.append(emittersList)
     positions.append(detectorsList)
@@ -140,7 +151,7 @@ detectors = 8
 # l (deg)
 detectorsAngle = 45
 # Ilość pomiarów
-iterations = 90
+iterations = 1
 # Maksynalny kąt obrotu
 maxAng = 180.
 # Zaznaczanie odwiedzonych, printy itd.
