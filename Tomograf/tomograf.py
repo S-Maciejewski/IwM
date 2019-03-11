@@ -37,21 +37,6 @@ def bresenhamGenerator(x0, y0, x1, y1):
         D += 2*dy
 
 
-def getValuesNN(positions):
-    emitterList = positions[0]
-    detectorList = positions[1]
-    values = []
-    for x in range(len(emitterList)):
-        value = 0
-        for i in bresenhamGenerator(emitterList[x][0], emitterList[x][1], detectorList[x][0], detectorList[x][1]):
-            # print(i)
-            value += img[i[0], i[1]]
-            if debug:
-                markedImg[i[0], i[1]] = 1
-        values.append(np.float64(value / img.shape[0]))
-    return values
-
-
 def getValues(emitter, detectors):
     values = []
     for det in detectors:
@@ -96,34 +81,13 @@ def getPositions(ang):
     return positions
 
 
-def getPositionsNN(ang):
-    ang = np.deg2rad(ang)
-    positions = []
-    emittersList = []
-    detectorsList = []
-    r = img.shape[0] * np.sqrt(2) / 2
-    center = int(img.shape[0] / 2)
-    if detectors > 1:
-        for i in range(detectors):
-            position = [int(r * np.cos(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
-            emittersList.append(project(position))
-            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 - i * detectorsAngle / (detectors - 1))) + center]
-            detectorsList.append(project(position))
-
-    positions.append(emittersList)
-    positions.append(detectorsList)
-    return positions
-
-
 def getSinogram():
     sinogram = []
     angles = np.linspace(0., maxAng, iterations, endpoint=False)
     for ang in angles:
-        positions = getPositionsNN(ang)
+        positions = getPositions(ang)
 
-        values = getValuesNN(positions)
+        values = getValues(positions[0], positions[1:])
         sinogram.append(values)
     return sinogram
 
@@ -136,15 +100,15 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 
 # Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
-detectors = 8
+detectors = 128
 # l (deg)
-detectorsAngle = 45
+detectorsAngle = 10
 # Ilość pomiarów
-iterations = 90
+iterations = 180
 # Maksynalny kąt obrotu
 maxAng = 180.
 # Zaznaczanie odwiedzonych, printy itd.
-debug = True
+debug = False
 
 if debug:
     markedImg = img.copy()
@@ -154,18 +118,18 @@ sinogram = getSinogram()
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
 
 if debug:
-    ax1.set_title("Image - scanned pixel marked")
+    ax1.set_title("Original image")
     ax1.imshow(markedImg, cmap=plt.cm.Greys_r)
 else:
-    ax1.set_title("Original image")
+    ax1.set_title("Image - scanned pixel marked")
     ax1.imshow(img, cmap=plt.cm.Greys_r)
 
 sinogram = np.array(sinogram).transpose()
 
-# if debug:
-    # print('Img:\n', img)
-    # print('Sinogram:\n', sinogram)
-    # print('Sinogram dimensions: ', len(sinogram), ', ', len(sinogram[0]))
+if debug:
+    print('Img:\n', img)
+    print('Sinogram:\n', sinogram)
+    print('Sinogram dimensions: ', len(sinogram), ', ', len(sinogram[0]))
 
 ax2.set_title("Sinogram")
 ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
