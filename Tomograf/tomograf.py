@@ -45,20 +45,15 @@ def isValidPoint(x, y):
 
 
 def normalize(vector):
-    if max(vector) != 0:
-        return [x / max(vector) for x in vector]
-    else:
-        return [0 for x in vector]
+    return [x / max(vector) if max(vector) != 0 and x >= 0 else 0 for x in vector]
 
 
 def unsharpMasking(vector):
     for i in range(len(vector)):
         if i != 0 and i != len(vector) - 1:
-            vector[i - 1] -= vector[i] * \
-                0.1 if vector[i - 1] >= vector[i] else 0
-            vector[i + 1] -= vector[i] * \
-                0.1 if vector[i + 1] >= vector[i] else 0
-            vector[i] += 1.1 * vector[i]
+            vector[i - 1] -= vector[i] * 0.3
+            vector[i + 1] -= vector[i] * 0.3
+            vector[i] += 1.2 * vector[i]
     return normalize(vector)
 
 
@@ -103,17 +98,16 @@ def getSinogram():
 
         values = getValues(positions[0], positions[1:])
         sinogram.append(values)
-        # sinogram.append(unsharpMasking(values))
     return sinogram
 
 
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
-# img = addPadding(data.imread("slp256.png", as_gray=True))
+img = addPadding(data.imread("slp256.png", as_gray=True))
 # img = addPadding(np.zeros([512, 512], dtype=np.uint8))
-img = addPadding(np.zeros([40, 40], dtype=np.uint8))
-img[0, 20] = 1
-img[10,25] = img[11,27] = img[12, 29] = 0.5
-img[10,26] = img[11,26] = img[12, 27] = 0.25
+# img = addPadding(np.zeros([40, 40], dtype=np.uint8))
+# img[0, 20] = 1
+# img[10,25] = img[11,27] = img[12, 29] = 0.5
+# img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 
 # Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
@@ -156,13 +150,10 @@ ax2.set_xlabel("Iteration number")
 ax2.set_ylabel("Detector number")
 ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
 
-sinogramMasked = np.array([unsharpMasking(vector) for vector in sinogram])
-
-print('sinogram',sinogram,'\n\nsinogram masked',sinogramMasked)
-
 ax3.set_title("Sinogram (mask)")
 ax3.set_xlabel("Iteration number")
 ax3.set_ylabel("Detector number")
-ax3.imshow(sinogramMasked, cmap=plt.cm.Greys_r)
+ax3.imshow([unsharpMasking(vector)
+            for vector in sinogram], cmap=plt.cm.Greys_r)
 
 plt.show()
