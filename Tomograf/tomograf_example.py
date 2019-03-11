@@ -5,7 +5,7 @@ import numpy as np
 # Nie jestem pewnien, czy można tego używać
 from skimage.transform import radon, iradon
 
-img = data.imread("mozg_inverted_400.png", as_gray=True)
+img = data.imread("slp256.png", as_gray=True)
 iterations = 360
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
