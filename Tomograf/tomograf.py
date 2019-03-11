@@ -44,6 +44,24 @@ def isValidPoint(x, y):
         return False
 
 
+def normalize(vector):
+    if max(vector) != 0:
+        return [x / max(vector) for x in vector]
+    else:
+        return [0 for x in vector]
+
+
+def unsharpMasking(vector):
+    for i in range(len(vector)):
+        if i != 0 and i != len(vector) - 1:
+            vector[i - 1] -= vector[i] * \
+                0.1 if vector[i - 1] >= vector[i] else 0
+            vector[i + 1] -= vector[i] * \
+                0.1 if vector[i + 1] >= vector[i] else 0
+            vector[i] += 1.1 * vector[i]
+    return normalize(vector)
+
+
 def getValues(emitter, detectors):
     values = []
     for det in detectors:
@@ -85,22 +103,26 @@ def getSinogram():
 
         values = getValues(positions[0], positions[1:])
         sinogram.append(values)
+        # sinogram.append(unsharpMasking(values))
     return sinogram
 
 
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
-img = addPadding(data.imread("slp256.png", as_gray=True))
+# img = addPadding(data.imread("slp256.png", as_gray=True))
 # img = addPadding(np.zeros([512, 512], dtype=np.uint8))
-# img = addPadding(np.zeros([50, 50], dtype=np.uint8))
+img = addPadding(np.zeros([40, 40], dtype=np.uint8))
+img[0, 20] = 1
+img[10,25] = img[11,27] = img[12, 29] = 0.5
+img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 
 # Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
-detectors = 128
+detectors = 100
 # l (deg)
 detectorsAngle = 2 * np.deg2rad(90)
 # Ilość pomiarów
-iterations = 1
+iterations = 100
 # Maksynalny kąt obrotu
 maxAng = 360.
 # Zaznaczanie odwiedzonych, printy itd.
@@ -111,7 +133,9 @@ if debug:
 
 sinogram = getSinogram()
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
+# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
+
 
 if debug:
     ax1.set_title("Image - scanned pixel marked")
@@ -128,6 +152,17 @@ if debug:
     print('Sinogram dimensions: ', len(sinogram), ', ', len(sinogram[0]))
 
 ax2.set_title("Sinogram")
+ax2.set_xlabel("Iteration number")
+ax2.set_ylabel("Detector number")
 ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
+
+sinogramMasked = np.array([unsharpMasking(vector) for vector in sinogram])
+
+print('sinogram',sinogram,'\n\nsinogram masked',sinogramMasked)
+
+ax3.set_title("Sinogram (mask)")
+ax3.set_xlabel("Iteration number")
+ax3.set_ylabel("Detector number")
+ax3.imshow(sinogramMasked, cmap=plt.cm.Greys_r)
 
 plt.show()
