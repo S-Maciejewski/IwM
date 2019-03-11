@@ -62,39 +62,17 @@ def isValidPoint(x, y):
         return False
 
 
-# Obsolete projection
-def project(pos):
-    p = [0, 0]
-    if pos[0] >= 0 and pos[0] < img.shape[0]:
-        p[0] = pos[0]
-    elif pos[0] >= 0:
-        p[0] = img.shape[0] - 1
-    else:
-        0
-    if pos[1] >= 0 and pos[1] < img.shape[0]:
-        p[1] = pos[1]
-    elif pos[1] >= 0:
-        p[1] = img.shape[0] - 1
-    else:
-        0
-    return p
-
-
 def getPositions(angDeg):
     ang = np.deg2rad(angDeg)
-    print('Angles: ', ang, angDeg)
     positions = []
     r = img.shape[0] * np.sqrt(2) / 2
     center = int(img.shape[0] / 2)
-    # positions.append(
-    # project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
     positions.append([int(r * np.cos(ang)) + center,
                       int(r * np.sin(ang)) + center])
     if detectors > 1:
         for i in range(detectors):
-            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
-            # positions.append(project(position))
+            position = [int(r * np.cos(ang + np.pi - np.float(detectorsAngle) / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                        int(r * np.sin(ang + np.pi - np.float(detectorsAngle) / 2 + i * detectorsAngle / (detectors - 1))) + center]
             positions.append(position)
     return positions
 
@@ -118,15 +96,15 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 
 # Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
-detectors = 8
+detectors = 128
 # l (deg)
-detectorsAngle = 30
+detectorsAngle = np.deg2rad(5)
 # Ilość pomiarów
-iterations = 30
+iterations = 180
 # Maksynalny kąt obrotu
 maxAng = 360.
 # Zaznaczanie odwiedzonych, printy itd.
-debug = True
+debug = False
 
 if debug:
     markedImg = img.copy()
@@ -136,10 +114,10 @@ sinogram = getSinogram()
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
 
 if debug:
-    ax1.set_title("Original image")
+    ax1.set_title("Image - scanned pixel marked")
     ax1.imshow(markedImg, cmap=plt.cm.Greys_r)
 else:
-    ax1.set_title("Image - scanned pixel marked")
+    ax1.set_title("Original image")
     ax1.imshow(img, cmap=plt.cm.Greys_r)
 
 sinogram = np.array(sinogram).transpose()
