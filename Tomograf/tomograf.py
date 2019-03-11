@@ -37,6 +37,13 @@ def bresenhamGenerator(x0, y0, x1, y1):
         D += 2*dy
 
 
+def isValidPoint(x, y):
+    if x >= 0 and x < img.shape[0] and y >= 0 and y < img.shape[0]:
+        return True
+    else:
+        return False
+
+
 def getValues(emitter, detectors):
     values = []
     for det in detectors:
@@ -55,13 +62,6 @@ def getValues(emitter, detectors):
     return values
 
 
-def isValidPoint(x, y):
-    if x >= 0 and x < img.shape[0] and y >= 0 and y < img.shape[0]:
-        return True
-    else:
-        return False
-
-
 def getPositions(angDeg):
     ang = np.deg2rad(angDeg)
     positions = []
@@ -71,8 +71,8 @@ def getPositions(angDeg):
                       int(r * np.sin(ang)) + center])
     if detectors > 1:
         for i in range(detectors):
-            position = [int(r * np.cos(ang + np.pi - np.float(detectorsAngle) / 2 + i * detectorsAngle / (detectors - 1))) + center,
-                        int(r * np.sin(ang + np.pi - np.float(detectorsAngle) / 2 + i * detectorsAngle / (detectors - 1))) + center]
+            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
             positions.append(position)
     return positions
 
@@ -98,9 +98,9 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # n
 detectors = 128
 # l (deg)
-detectorsAngle = np.deg2rad(5)
+detectorsAngle = 2 * np.deg2rad(90)
 # Ilość pomiarów
-iterations = 180
+iterations = 1
 # Maksynalny kąt obrotu
 maxAng = 360.
 # Zaznaczanie odwiedzonych, printy itd.
