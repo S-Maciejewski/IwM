@@ -77,16 +77,21 @@ def getPositions(ang):  # TODO
     # print('angle: ', ang)
     ang = np.deg2rad(ang)
     positions = []
-    r = img.shape[0] * 2
-    positions.append(project([int(r * np.cos(ang)), int(r * np.sin(ang))]))
-    # positions.append([int(r * np.cos(ang)) + center,
+    # r = img.shape[0] / 2
+    r = img.shape[0] * np.sqrt(2) / 2
+    center = int(img.shape[0] / 2)
+    # positions.append(project([int(r * np.cos(ang)), int(r * np.sin(ang))]))
+    positions.append(
+        project([int(r * np.cos(ang)) + center, int(r * np.sin(ang)) + center]))
     #   int(r * np.sin(ang)) + center])
     # print('Emitter: ', positions[0])
     # img[positions[0][0], positions[0][1]] = 0.25 # Zaznacz pozycje emitera
     if detectors > 1:
         for i in range(detectors):
-            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))),
-                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1)))]
+            # position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))),
+                        # int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1)))]
+            position = [int(r * np.cos(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center,
+                        int(r * np.sin(ang + np.pi - detectorsAngle / 2 + i * detectorsAngle / (detectors - 1))) + center]
             positions.append(project(position))
     return positions
 
@@ -98,10 +103,10 @@ def getSinogram():
         positions = getPositions(ang)
         # print('Positions: ', positions[1:])
 
-        # markVisited(positions[0], positions[1:])
+        markVisited(positions[0], positions[1:])
 
-        values = getValues(positions[0], positions[1:])
-        sinogram.append(values)
+        # values = getValues(positions[0], positions[1:])
+        # sinogram.append(values)
     return sinogram
 
 
@@ -111,7 +116,7 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img = addPadding(np.zeros([50, 200], dtype=np.uint8))
 
 
-# Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128 
+# Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
 # n
 detectors = 128
 # l (deg)
@@ -128,17 +133,17 @@ ax1.imshow(img, cmap=plt.cm.Greys_r)
 # print('img: ', type(img), type(img[0]), type(img[0][0]))
 
 # print(sinogram)
-print(len(sinogram), ', ', len(sinogram[0]))
+# print(len(sinogram), ', ', len(sinogram[0]))
 # print(type(sinogram), type(sinogram[0]))
-sinogram = np.array(sinogram)
+# sinogram = np.array(sinogram)
 # sinogram = np.array(sinogram).transpose()
-print(type(sinogram), type(sinogram[0]), type(sinogram[0][0]))
+# print(type(sinogram), type(sinogram[0]), type(sinogram[0][0]))
 
 print('Sinogram: ', sinogram)
 print('Img: ', img)
 
-ax2.set_title("Sinogram")
-ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
+# ax2.set_title("Sinogram")
+# ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
 
 # invertedSinogram
 # ax3.set_title("Inverted")
