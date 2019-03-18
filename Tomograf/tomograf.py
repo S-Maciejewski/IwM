@@ -75,7 +75,7 @@ def getValues(emitter, detectors):
     return values
 
 
-def getPositions(angDeg):
+def getPositions(angDeg, detectors, detectorsAngle):
     ang = np.deg2rad(angDeg)
     positions = []
     r = img.shape[0] * np.sqrt(2) / 2
@@ -90,17 +90,55 @@ def getPositions(angDeg):
     return positions
 
 
-def getSinogram():
+def getSinogram(detectors, detectorsAngle, iterations):
     sinogram = []
-    angles = np.linspace(0., maxAng, iterations, endpoint=False)
+    angles = np.linspace(0., 360., iterations, endpoint=False)
     for ang in angles:
-        positions = getPositions(ang)
+        positions = getPositions(ang, detectors, detectorsAngle)
 
         values = getValues(positions[0], positions[1:])
         sinogram.append(values)
     return sinogram
 
 
+def drawSinogram(detectors, detectorsAngle, iterations):
+    detectorsAngle = 2 * np.deg2rad(detectorsAngle)
+
+    if debug:
+        markedImg = img.copy()
+
+    sinogram = getSinogram(detectors, detectorsAngle, iterations)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
+
+    if debug:
+        ax1.set_title("Image - scanned pixel marked")
+        ax1.imshow(markedImg, cmap=plt.cm.Greys_r)
+    else:
+        ax1.set_title("Original image")
+        ax1.imshow(img, cmap=plt.cm.Greys_r)
+
+    sinogram = np.array(sinogram).transpose()
+
+    if debug:
+        print('Img:\n', img)
+        print('Sinogram:\n', sinogram)
+        print('Sinogram dimensions: ', len(sinogram), ', ', len(sinogram[0]))
+
+    ax2.set_title("Sinogram")
+    ax2.set_xlabel("Iteration number")
+    ax2.set_ylabel("Detector number")
+    ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
+
+    ax3.set_title("Sinogram (mask)")
+    ax3.set_xlabel("Iteration number")
+    ax3.set_ylabel("Detector number")
+    ax3.imshow([unsharpMasking(vector)
+                for vector in sinogram], cmap=plt.cm.Greys_r)
+    plt.show()
+
+
+# Różne przykładowe zdjęcia do testowania
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
 img = addPadding(data.imread("slp256.png", as_gray=True))
 # img = addPadding(np.zeros([512, 512], dtype=np.uint8))
@@ -109,51 +147,13 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,25] = img[11,27] = img[12, 29] = 0.5
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
-
-# Zmienne sterujące np. 128 90 180 dla Siemens Somatom Perspective 128
-# n
+# n - ilość detektorów
 detectors = 100
-# l (deg)
-detectorsAngle = 2 * np.deg2rad(90)
+# l (deg) - kąt między skrajnymi detektorami przy emiterze
+detectorsAngle = 90
 # Ilość pomiarów
 iterations = 100
-# Maksynalny kąt obrotu
-maxAng = 360.
 # Zaznaczanie odwiedzonych, printy itd.
 debug = False
 
-if debug:
-    markedImg = img.copy()
-
-sinogram = getSinogram()
-
-# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
-
-
-if debug:
-    ax1.set_title("Image - scanned pixel marked")
-    ax1.imshow(markedImg, cmap=plt.cm.Greys_r)
-else:
-    ax1.set_title("Original image")
-    ax1.imshow(img, cmap=plt.cm.Greys_r)
-
-sinogram = np.array(sinogram).transpose()
-
-if debug:
-    print('Img:\n', img)
-    print('Sinogram:\n', sinogram)
-    print('Sinogram dimensions: ', len(sinogram), ', ', len(sinogram[0]))
-
-ax2.set_title("Sinogram")
-ax2.set_xlabel("Iteration number")
-ax2.set_ylabel("Detector number")
-ax2.imshow(sinogram, cmap=plt.cm.Greys_r)
-
-ax3.set_title("Sinogram (mask)")
-ax3.set_xlabel("Iteration number")
-ax3.set_ylabel("Detector number")
-ax3.imshow([unsharpMasking(vector)
-            for vector in sinogram], cmap=plt.cm.Greys_r)
-
-plt.show()
+drawSinogram(detectors, detectorsAngle, iterations)
