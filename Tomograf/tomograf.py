@@ -48,6 +48,15 @@ def normalize(vector):
     return [x / max(vector) if max(vector) != 0 and x >= 0 else 0 for x in vector]
 
 
+def normalizeArray(arr):
+    vector = []
+    for row in arr:
+        vector.extend(row)
+    maxValue = max(vector)
+    print(len(vector), maxValue)
+    return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
+
+
 def unsharpMasking(vector):
     for i in range(len(vector)):
         if i != 0 and i != len(vector) - 1:
