@@ -1,6 +1,9 @@
 from skimage import data, io, filters, exposure, measure, color, feature
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import animation
+from matplotlib.animation import FuncAnimation
+import matplotlib
 
 
 def addPadding(img):
@@ -147,6 +150,35 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     plt.show()
 
 
+def animateSinogram(detectors, detectorsAngle, iterations):
+    detectorsAngle = 2 * np.deg2rad(detectorsAngle)
+    angles = list(np.linspace(0., 360., 9, endpoint=True))
+    angles.insert(0, 0.)
+
+    aniFig = plt.figure()
+    ax = aniFig.add_subplot(111)
+    sinogram = np.array(getSinogram(
+        detectors, detectorsAngle, iterations)).transpose()
+    blankSinogram = np.zeros([sinogram.shape[0], sinogram.shape[1]])
+
+    def init():
+        ax.tick_params(axis='x', )
+        ax.set_title("Sinogram animation")
+        ax.set_xlabel("Rotation angle")
+        ax.set_ylabel("Detector number")
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(angles))
+        ax.locator_params(axis='x', nbins=10)
+        return ax.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+
+    def update(time):
+        blankSinogram[:, time] = sinogram[:, time]
+        return ax.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+
+    ani = FuncAnimation(aniFig, update,  np.linspace(
+        0, iterations, iterations).astype(int), init_func=init, interval=1.)
+    plt.show()
+
+
 # Różne przykładowe zdjęcia do testowania
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
 img = addPadding(data.imread("slp256.png", as_gray=True))
@@ -157,12 +189,13 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 # n - ilość detektorów
-detectors = 100
+detectors = 60
 # l (deg) - kąt między skrajnymi detektorami przy emiterze
 detectorsAngle = 90
 # Ilość pomiarów
-iterations = 100
+iterations = 80
 # Zaznaczanie odwiedzonych, printy itd.
 debug = False
 
-drawSinogram(detectors, detectorsAngle, iterations)
+# drawSinogram(detectors, detectorsAngle, iterations)
+animateSinogram(detectors, detectorsAngle, iterations)
