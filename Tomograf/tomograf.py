@@ -131,7 +131,7 @@ def normalizeInDicom(image_temp):
     for i in range(len(image)):
         for x in range(len(image_temp[0])):
             if maximum != 0 and image_temp[i][x] > 0:
-                image_temp[i][x] = image_temp[i][x]*1000/maximum
+                image_temp[i][x] = image_temp[i][x]*1024/maximum
             else:
                 image_temp[i][x] = 0
     return image_temp
@@ -157,16 +157,25 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
     return image
 
 
-def writeDicom(image):
-    filename = get_testdata_files("MR_small.dcm")[0]
+def write_dicom(image,name,comment):
+    filename=get_testdata_files("CT_small.dcm")[0]
     ds = pydicom.dcmread(filename)
-    image = normalizeInDicom(image)
-    image2 = np.asarray(image, dtype=np.uint16)
-    ds.Rows = image2.shape[0]
-    ds.Columns = image2.shape[1]
+    image =normalize_In_DICOM(image)
+    image2 = np.asarray(image,dtype = np.uint16)
+    ds.Rows = image2.shape[1]
+    ds.Columns = image2.shape[0]
     ds.PixelData = image2.tostring()
-    ds.PatientName = "Jan Ziemniewicz"
-    ds.save_as("MR_small.dcm")
+    ds.PatientName = name
+    ds.InstitutionName = 'Politechnika Poznanska'
+    ds.Manufacturer = 'Politechnika Poznanska'
+    ds.PatientSex = 'M'
+    ds.PatientBirthDate='19970912'
+    dt = datetime.datetime.now()
+    ds.StudyDate = dt.strftime('%Y%m%d')
+    timeStr = dt.strftime('%H%M%S.%d')
+    ds.StudyTime = timeStr
+    ds.AdditionalPatientHistory = comment
+    ds.save_as("Tomograf_DICOM.dcm")
 
 
 def drawSinogram(detectors, detectorsAngle, iterations):
@@ -188,7 +197,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         ax1.set_title("Original image")
         ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-    # writeDicom(image)
+    # writeDicom(image,"Imie Nazwisko","Komentarz")
 
     if debug:
         print('Img:\n', img)
