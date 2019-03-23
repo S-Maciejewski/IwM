@@ -4,6 +4,12 @@ import numpy as np
 from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 import matplotlib
+import pydicom
+from pydicom.dataset import Dataset, FileDataset
+from pydicom.data import get_testdata_files
+import os
+import tempfile
+import datetime
 
 
 def addPadding(img):
@@ -56,15 +62,18 @@ def normalizeArray(arr):
     for row in arr:
         vector.extend(row)
     maxValue = max(vector)
-    print(len(vector), maxValue)
     return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
 
 
 def unsharpMasking(vector):
     for i in range(len(vector)):
         if i != 0 and i != len(vector) - 1:
-            vector[i - 1] -= vector[i] * 0.3
-            vector[i + 1] -= vector[i] * 0.3
+            vector[i - 1] -= vector[i] * 0.5
+            # if vector[i-1]<0:
+            # vector[i-1]=0
+            vector[i + 1] -= vector[i] * 0.5
+            # if vector[i+1]<0:
+            #     vector[i+1]=0
             vector[i] += 1.2 * vector[i]
     return normalize(vector)
 
@@ -113,15 +122,64 @@ def getSinogram(detectors, detectorsAngle, iterations):
     return sinogram
 
 
+def normalizeInDicom(image_temp):
+    maximum = 0
+    for vector in image_temp:
+        if max(vector) > maximum:
+            maximum = max(vector)
+    print(maximum)
+    for i in range(len(image)):
+        for x in range(len(image_temp[0])):
+            if maximum != 0 and image_temp[i][x] > 0:
+                image_temp[i][x] = image_temp[i][x]*1000/maximum
+            else:
+                image_temp[i][x] = 0
+    return image_temp
+
+
+def getInverse(sinogram, iterations, detectorsAngle, filtered):
+    angles = np.linspace(0., 360., iterations, endpoint=False)
+    image = [[0 for i in range(img.shape[0])] for j in range(img.shape[0])]
+
+    def addValue(emitter, detectors, values):
+        for det in range(len(detectors)):
+            for i in bresenhamGenerator(emitter[0], emitter[1], detectors[det][0], detectors[det][1]):
+                if isValidPoint(i[0], i[1]):
+                    image[i[0]][i[1]] += values[det]
+
+    for i in range(iterations):
+        positions = getPositions(angles[i], detectors, detectorsAngle)
+        col = sinogram[:, i] if filtered else unsharpMasking(sinogram[:, i])
+        addValue(positions[0], positions[1:], col)
+
+    normalizeArray(image)
+
+    return image
+
+
+def writeDicom(image):
+    filename = get_testdata_files("MR_small.dcm")[0]
+    ds = pydicom.dcmread(filename)
+    image = normalizeInDicom(image)
+    image2 = np.asarray(image, dtype=np.uint16)
+    ds.Rows = image2.shape[0]
+    ds.Columns = image2.shape[1]
+    ds.PixelData = image2.tostring()
+    ds.PatientName = "Jan Ziemniewicz"
+    ds.save_as("MR_small.dcm")
+
+
 def drawSinogram(detectors, detectorsAngle, iterations):
     detectorsAngle = 2 * np.deg2rad(detectorsAngle)
 
     if debug:
         markedImg = img.copy()
 
-    sinogram = getSinogram(detectors, detectorsAngle, iterations)
+    sinogram = np.array(getSinogram(
+        detectors, detectorsAngle, iterations)).transpose()
+    image = getInverse(sinogram, iterations, detectorsAngle, 0)
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(10, 10))
 
     if debug:
         ax1.set_title("Image - scanned pixel marked")
@@ -130,7 +188,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         ax1.set_title("Original image")
         ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-    sinogram = np.array(sinogram).transpose()
+    # writeDicom(image)
 
     if debug:
         print('Img:\n', img)
@@ -147,6 +205,10 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     ax3.set_ylabel("Detector number")
     ax3.imshow([unsharpMasking(vector)
                 for vector in sinogram], cmap=plt.cm.Greys_r)
+
+    ax4.set_title("BP")
+    ax4.imshow(image, cmap=plt.cm.Greys_r)
+
     plt.show()
 
 
@@ -189,13 +251,13 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 # n - ilość detektorów
-detectors = 60
+detectors = 180
 # l (deg) - kąt między skrajnymi detektorami przy emiterze
 detectorsAngle = 90
 # Ilość pomiarów
-iterations = 80
+iterations = 120
 # Zaznaczanie odwiedzonych, printy itd.
 debug = False
 
-# drawSinogram(detectors, detectorsAngle, iterations)
-animateSinogram(detectors, detectorsAngle, iterations)
+drawSinogram(detectors, detectorsAngle, iterations)
+# animateSinogram(detectors, detectorsAngle, iterations)
