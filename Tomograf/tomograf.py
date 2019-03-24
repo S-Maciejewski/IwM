@@ -263,6 +263,52 @@ def animateSinogram(detectors, detectorsAngle, iterations):
     plt.show()
 
 
+def animateInverse(detectors, detectorsAngle, iterations):
+    detectorsAngle = 2 * np.deg2rad(detectorsAngle)
+
+    sinogram = np.array(getSinogram(
+        detectors, detectorsAngle, iterations)).transpose()
+    image = getInverse(sinogram, iterations, detectorsAngle, 0)
+    blankImg = np.zeros([img.shape[0], img.shape[1]])
+
+    aniFig, ((axSin, axAni), (axImg, axImgInv)) = plt.subplots(2, 2, figsize=(10, 10))
+
+    def init():
+        axImg.set_title("Original image")
+        axImg.imshow(img, cmap=plt.cm.Greys_r)
+
+        axAni.tick_params(axis='x', )
+        axAni.set_title("Inverse transform animation")
+        # axAni.set_xlabel("Rotation angle")
+        # axAni.set_ylabel("Detector number")
+        # axAni.xaxis.set_major_formatter(
+        #     matplotlib.ticker.FixedFormatter(angles))
+        # axAni.locator_params(axis='x', nbins=7)
+        axAni.imshow(blankImg, cmap=plt.cm.Greys_r)
+
+        axSin.set_title("Sinogram")
+        axSin.set_xlabel("Iteration number")
+        axSin.set_ylabel("Detector number")
+        axSin.imshow(sinogram, cmap=plt.cm.Greys_r)
+
+        axImgInv.set_title("Inverse transform result")
+        axImgInv.imshow(image, cmap=plt.cm.Greys_r)
+
+        return aniFig
+
+    def update(time):
+        # blankImg[:, time] = image[:, time]
+        blankImg[time] = image[time]
+        axAni.imshow(blankImg, cmap=plt.cm.Greys_r)
+        return aniFig
+
+    size = img.shape[0]
+
+    ani = FuncAnimation(aniFig, update,  np.linspace(
+        0, size, size).astype(int), init_func=init, interval=1.)
+    plt.show()
+
+
 # Różne przykładowe zdjęcia do testowania
 # img = addPadding(data.imread("mozg_inverted_400.png", as_gray=True))
 img = addPadding(data.imread("slp256.png", as_gray=True))
@@ -282,4 +328,5 @@ iterations = 120
 debug = False
 
 # drawSinogram(detectors, detectorsAngle, iterations)
-animateSinogram(detectors, detectorsAngle, iterations)
+# animateSinogram(detectors, detectorsAngle, iterations)
+animateInverse(detectors, detectorsAngle, iterations)
