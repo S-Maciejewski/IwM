@@ -147,7 +147,6 @@ def writeDicom(image, name, comment, sex, birthDate):
         for vector in image_temp:
             if max(vector) > maximum:
                 maximum = max(vector)
-        print(maximum)
         for i in range(len(image_temp)):
             for x in range(len(image_temp[0])):
                 if maximum != 0 and image_temp[i][x] > 0:
@@ -327,7 +326,7 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 # n - ilość detektorów
-detectors = 100
+detectors = 120
 # l (deg) - kąt między skrajnymi detektorami przy emiterze
 detectorsAngle = 90
 # Ilość pomiarów
