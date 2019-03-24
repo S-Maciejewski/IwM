@@ -188,7 +188,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         detectors, detectorsAngle, iterations)).transpose()
     image = getInverse(sinogram, iterations, detectorsAngle, 0)
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(10, 10))
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
     if debug:
         ax1.set_title("Image - scanned pixel marked")
@@ -197,7 +197,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         ax1.set_title("Original image")
         ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-    writeDicom(image, "Imie Nazwisko", "Komentarz", 'M', '19970912')
+    # writeDicom(image, "Imie Nazwisko", "Komentarz", 'M', '19970912')
 
     if debug:
         print('Img:\n', img)
@@ -215,7 +215,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     ax3.imshow([unsharpMasking(vector)
                 for vector in sinogram], cmap=plt.cm.Greys_r)
 
-    ax4.set_title("BP")
+    ax4.set_title("Inverse Radon transform result")
     ax4.imshow(image, cmap=plt.cm.Greys_r)
 
     plt.show()
@@ -271,7 +271,8 @@ def animateInverse(detectors, detectorsAngle, iterations):
     image = getInverse(sinogram, iterations, detectorsAngle, 0)
     blankImg = np.zeros([img.shape[0], img.shape[1]])
 
-    aniFig, ((axSin, axAni), (axImg, axImgInv)) = plt.subplots(2, 2, figsize=(10, 10))
+    aniFig, ((axSin, axAni), (axImg, axImgInv)
+             ) = plt.subplots(2, 2, figsize=(10, 10))
 
     def init():
         axImg.set_title("Original image")
@@ -279,11 +280,6 @@ def animateInverse(detectors, detectorsAngle, iterations):
 
         axAni.tick_params(axis='x', )
         axAni.set_title("Inverse transform animation")
-        # axAni.set_xlabel("Rotation angle")
-        # axAni.set_ylabel("Detector number")
-        # axAni.xaxis.set_major_formatter(
-        #     matplotlib.ticker.FixedFormatter(angles))
-        # axAni.locator_params(axis='x', nbins=7)
         axAni.imshow(blankImg, cmap=plt.cm.Greys_r)
 
         axSin.set_title("Sinogram")
@@ -297,7 +293,6 @@ def animateInverse(detectors, detectorsAngle, iterations):
         return aniFig
 
     def update(time):
-        # blankImg[:, time] = image[:, time]
         blankImg[time] = image[time]
         axAni.imshow(blankImg, cmap=plt.cm.Greys_r)
         return aniFig
@@ -327,6 +322,6 @@ iterations = 120
 # Zaznaczanie odwiedzonych, printy itd.
 debug = False
 
-# drawSinogram(detectors, detectorsAngle, iterations)
+drawSinogram(detectors, detectorsAngle, iterations)
 # animateSinogram(detectors, detectorsAngle, iterations)
-animateInverse(detectors, detectorsAngle, iterations)
+# animateInverse(detectors, detectorsAngle, iterations)
