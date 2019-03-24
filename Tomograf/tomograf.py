@@ -122,21 +122,6 @@ def getSinogram(detectors, detectorsAngle, iterations):
     return sinogram
 
 
-def normalizeInDicom(image_temp):
-    maximum = 0
-    for vector in image_temp:
-        if max(vector) > maximum:
-            maximum = max(vector)
-    print(maximum)
-    for i in range(len(image)):
-        for x in range(len(image_temp[0])):
-            if maximum != 0 and image_temp[i][x] > 0:
-                image_temp[i][x] = image_temp[i][x]*1024/maximum
-            else:
-                image_temp[i][x] = 0
-    return image_temp
-
-
 def getInverse(sinogram, iterations, detectorsAngle, filtered):
     angles = np.linspace(0., 360., iterations, endpoint=False)
     image = [[0 for i in range(img.shape[0])] for j in range(img.shape[0])]
@@ -157,19 +142,34 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
     return image
 
 
-def write_dicom(image,name,comment):
-    filename=get_testdata_files("CT_small.dcm")[0]
+def writeDicom(image, name, comment, sex, birthDate):
+    filename = get_testdata_files("CT_small.dcm")[0]
     ds = pydicom.dcmread(filename)
-    image =normalize_In_DICOM(image)
-    image2 = np.asarray(image,dtype = np.uint16)
+
+    def normalizeInDicom(image_temp):
+        maximum = 0
+        for vector in image_temp:
+            if max(vector) > maximum:
+                maximum = max(vector)
+        print(maximum)
+        for i in range(len(image)):
+            for x in range(len(image_temp[0])):
+                if maximum != 0 and image_temp[i][x] > 0:
+                    image_temp[i][x] = image_temp[i][x]*1024/maximum
+                else:
+                    image_temp[i][x] = 0
+        return image_temp
+
+    image = normalizeInDicom(image)
+    image2 = np.asarray(image, dtype=np.uint16)
     ds.Rows = image2.shape[1]
     ds.Columns = image2.shape[0]
     ds.PixelData = image2.tostring()
     ds.PatientName = name
     ds.InstitutionName = 'Politechnika Poznanska'
     ds.Manufacturer = 'Politechnika Poznanska'
-    ds.PatientSex = 'M'
-    ds.PatientBirthDate='19970912'
+    ds.PatientSex = sex
+    ds.PatientBirthDate = birthDate
     dt = datetime.datetime.now()
     ds.StudyDate = dt.strftime('%Y%m%d')
     timeStr = dt.strftime('%H%M%S.%d')
@@ -197,7 +197,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         ax1.set_title("Original image")
         ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-    # writeDicom(image,"Imie Nazwisko","Komentarz")
+    writeDicom(image, "Imie Nazwisko", "Komentarz", 'M', '19970912')
 
     if debug:
         print('Img:\n', img)
