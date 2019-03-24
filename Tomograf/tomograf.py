@@ -223,27 +223,40 @@ def drawSinogram(detectors, detectorsAngle, iterations):
 
 def animateSinogram(detectors, detectorsAngle, iterations):
     detectorsAngle = 2 * np.deg2rad(detectorsAngle)
-    angles = list(np.linspace(0., 360., 9, endpoint=True))
+    angles = list(np.linspace(0., 360., 10, endpoint=False))
     angles.insert(0, 0.)
+    angles = [2 * int(angle) for angle in angles]
 
-    aniFig = plt.figure()
-    ax = aniFig.add_subplot(111)
+    aniFig, (axImg, axAni, axSin) = plt.subplots(1, 3, figsize=(10, 10))
+
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
     blankSinogram = np.zeros([sinogram.shape[0], sinogram.shape[1]])
 
     def init():
-        ax.tick_params(axis='x', )
-        ax.set_title("Sinogram animation")
-        ax.set_xlabel("Rotation angle")
-        ax.set_ylabel("Detector number")
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(angles))
-        ax.locator_params(axis='x', nbins=10)
-        return ax.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+        axImg.set_title("Original image")
+        axImg.imshow(img, cmap=plt.cm.Greys_r)
+
+        axAni.tick_params(axis='x', )
+        axAni.set_title("Sinogram animation")
+        axAni.set_xlabel("Rotation angle")
+        axAni.set_ylabel("Detector number")
+        axAni.xaxis.set_major_formatter(
+            matplotlib.ticker.FixedFormatter(angles))
+        # axAni.locator_params(axis='x', nbins=7)
+        axAni.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+
+        axSin.set_title("Sinogram")
+        axSin.set_xlabel("Iteration number")
+        axSin.set_ylabel("Detector number")
+        axSin.imshow(sinogram, cmap=plt.cm.Greys_r)
+
+        return aniFig
 
     def update(time):
         blankSinogram[:, time] = sinogram[:, time]
-        return ax.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+        axAni.imshow(blankSinogram, cmap=plt.cm.Greys_r)
+        return aniFig
 
     ani = FuncAnimation(aniFig, update,  np.linspace(
         0, iterations, iterations).astype(int), init_func=init, interval=1.)
@@ -260,7 +273,7 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 # n - ilość detektorów
-detectors = 180
+detectors = 120
 # l (deg) - kąt między skrajnymi detektorami przy emiterze
 detectorsAngle = 90
 # Ilość pomiarów
@@ -268,5 +281,5 @@ iterations = 120
 # Zaznaczanie odwiedzonych, printy itd.
 debug = False
 
-drawSinogram(detectors, detectorsAngle, iterations)
-# animateSinogram(detectors, detectorsAngle, iterations)
+# drawSinogram(detectors, detectorsAngle, iterations)
+animateSinogram(detectors, detectorsAngle, iterations)
