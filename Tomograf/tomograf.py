@@ -64,11 +64,14 @@ def normalizeArray(arr):
     maxValue = max(vector)
     return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
 
-def unsharpMasking(vector,mask):
+
+def unsharpMasking(vector, mask):
     tmp_vec = vector.copy()
-    for i in range(1,len(vector)-1):
-            tmp_vec[i] = vector[i]*mask[1]+ vector[i-1]*mask[0] +vector[i+1] * mask[2]
+    for i in range(1, len(vector)-1):
+        tmp_vec[i] = vector[i]*mask[1] + vector[i-1] * \
+            mask[0] + vector[i+1] * mask[2]
     return normalize(tmp_vec)
+
 
 def getValues(emitter, detectors):
     values = []
@@ -126,9 +129,10 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
 
     for i in range(iterations):
         positions = getPositions(angles[i], detectors, detectorsAngle)
-        col = sinogram[:,i] if filtered else unsharpMasking(sinogram[:,i],[-2,5,-2])
+        col = sinogram[:, i] if filtered else unsharpMasking(
+            sinogram[:, i], [-2, 5, -2])
         addValue(positions[0], positions[1:], col)
-    
+
     normalizeArray(image)
 
     return image
@@ -169,19 +173,24 @@ def writeDicom(image, name, comment, sex, birthDate):
     ds.AdditionalPatientHistory = comment
     ds.save_as("Tomograf_DICOM.dcm")
 
+
 def readDicom(filename):
     ds = pydicom.dcmread(filename)
     return ds
 
+
 def drawSinogram(detectors, detectorsAngle, iterations):
     detectorsAngle = 2 * np.deg2rad(detectorsAngle)
-    filename = "Tomograf_DICOM.dcm" #Zmnienna do której przypisywana będzie nazwa wczytywanego pliku
+    # Zmnienna do której przypisywana będzie nazwa wczytywanego pliku
+    filename = "Tomograf_DICOM.dcm"
     if debug:
         markedImg = img.copy()
 
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
     image = getInverse(sinogram, iterations, detectorsAngle, True)
+
+    mse = np.square(np.subtract(img, image)).mean()
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
@@ -208,17 +217,17 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     ax3.set_title("Sinogram (mask)")
     ax3.set_xlabel("Iteration number")
     ax3.set_ylabel("Detector number")
-    ax3.imshow([unsharpMasking(vector,[-2,5,-2])
+    ax3.imshow([unsharpMasking(vector, [-2, 5, -2])
                 for vector in sinogram], cmap=plt.cm.Greys_r)
 
-    #ax4.imshow(ds.pixel_array,cmap=plt.cm.Greys_r) # Wczytany plik
+    # ax4.imshow(ds.pixel_array,cmap=plt.cm.Greys_r) # Wczytany plik
     # Informacje do wyświetlenia to:
-        # ds.PatientName = name
-        # ds.PatientSex
-        # ds.PatientBirthDate
-        # ds.StudyDate
-        # ds.StudyTime
-        # ds.AdditionalPatientHistory
+    # ds.PatientName = name
+    # ds.PatientSex
+    # ds.PatientBirthDate
+    # ds.StudyDate
+    # ds.StudyTime
+    # ds.AdditionalPatientHistory
     ax4.set_title("Inverse Radon transform result")
     ax4.imshow(image, cmap=plt.cm.Greys_r)
 
@@ -318,7 +327,7 @@ img = addPadding(data.imread("slp256.png", as_gray=True))
 # img[10,26] = img[11,26] = img[12, 27] = 0.25
 
 # n - ilość detektorów
-detectors = 120
+detectors = 100
 # l (deg) - kąt między skrajnymi detektorami przy emiterze
 detectorsAngle = 90
 # Ilość pomiarów
