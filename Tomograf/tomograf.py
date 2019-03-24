@@ -65,17 +65,31 @@ def normalizeArray(arr):
     return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
 
 
-def unsharpMasking(vector):
-    for i in range(len(vector)):
-        if i != 0 and i != len(vector) - 1:
-            vector[i - 1] -= vector[i] * 0.5
-            # if vector[i-1]<0:
-            # vector[i-1]=0
-            vector[i + 1] -= vector[i] * 0.5
-            # if vector[i+1]<0:
-            #     vector[i+1]=0
-            vector[i] += 1.2 * vector[i]
-    return normalize(vector)
+def unsharpMasking(imageT):
+    filtered_image = [[0 for i in range(img.shape[0])] for j in range(img.shape[0])]
+    def getNeighbours(x,y):
+        neighbours = []
+        for i in range(x-1,x+2):
+            for j in range(y-1,y+2):
+                if(i>=0 and j >=0 and i<img.shape[0] and j<img.shape[1]):
+                   neighbours.append([i,j])
+        return neighbours 
+    
+    def getNeighboursAvg(neighbours,imageT):
+        avg = 0
+        
+        for ngb in neighbours:
+            # print(ngb[0])
+            # print(ngb[1])
+            #  print(imageT[int(ngb[1])][int(ngb[0])])
+            avg = avg + imageT[int(ngb[1])][int(ngb[0])])
+        # print("kon")
+        return avg/len(neighbours)
+
+    for x in range(len(imageT)):
+        for y in range(len(imageT)):
+            filtered_image[x][y] = getNeighboursAvg(getNeighbours(x,y),imageT)
+    return filtered_image
 
 
 def getValues(emitter, detectors):
@@ -134,9 +148,11 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
 
     for i in range(iterations):
         positions = getPositions(angles[i], detectors, detectorsAngle)
-        col = sinogram[:, i] if filtered else unsharpMasking(sinogram[:, i])
+        col = sinogram[:, i]
         addValue(positions[0], positions[1:], col)
-
+    
+    if filtered :
+        image = unsharpMasking(image)
     normalizeArray(image)
 
     return image
@@ -152,7 +168,7 @@ def writeDicom(image, name, comment, sex, birthDate):
             if max(vector) > maximum:
                 maximum = max(vector)
         print(maximum)
-        for i in range(len(image)):
+        for i in range(len(image_temp)):
             for x in range(len(image_temp[0])):
                 if maximum != 0 and image_temp[i][x] > 0:
                     image_temp[i][x] = image_temp[i][x]*1024/maximum
@@ -177,16 +193,19 @@ def writeDicom(image, name, comment, sex, birthDate):
     ds.AdditionalPatientHistory = comment
     ds.save_as("Tomograf_DICOM.dcm")
 
+def readDicom(filename):
+    ds = pydicom.dcmread(filename)
+    return ds
 
 def drawSinogram(detectors, detectorsAngle, iterations):
     detectorsAngle = 2 * np.deg2rad(detectorsAngle)
-
+    filename = "Tomograf_DICOM.dcm" #Zmnienna do której przypisywana będzie nazwa wczytywanego pliku
     if debug:
         markedImg = img.copy()
 
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
-    image = getInverse(sinogram, iterations, detectorsAngle, 0)
+    image = getInverse(sinogram, iterations, detectorsAngle, 1)
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
@@ -197,7 +216,8 @@ def drawSinogram(detectors, detectorsAngle, iterations):
         ax1.set_title("Original image")
         ax1.imshow(img, cmap=plt.cm.Greys_r)
 
-    # writeDicom(image, "Imie Nazwisko", "Komentarz", 'M', '19970912')
+    # writeDicom(image, "Imie Nazwisko", "Komentarz", 'M', '19970912') #tu trzeba podstawić zmienne z danymi pacjenta
+    # ds = readDicom(filename)
 
     if debug:
         print('Img:\n', img)
@@ -215,6 +235,14 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     ax3.imshow([unsharpMasking(vector)
                 for vector in sinogram], cmap=plt.cm.Greys_r)
 
+    #ax4.imshow(ds.pixel_array,cmap=plt.cm.Greys_r) # Wczytany plik
+    # Informacje do wyświetlenia to:
+        # ds.PatientName = name
+        # ds.PatientSex
+        # ds.PatientBirthDate
+        # ds.StudyDate
+        # ds.StudyTime
+        # ds.AdditionalPatientHistory
     ax4.set_title("Inverse Radon transform result")
     ax4.imshow(image, cmap=plt.cm.Greys_r)
 
