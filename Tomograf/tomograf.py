@@ -64,33 +64,11 @@ def normalizeArray(arr):
     maxValue = max(vector)
     return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
 
-
-def unsharpMasking(imageT):
-    filtered_image = [[0 for i in range(img.shape[0])] for j in range(img.shape[0])]
-    def getNeighbours(x,y):
-        neighbours = []
-        for i in range(x-1,x+2):
-            for j in range(y-1,y+2):
-                if(i>=0 and j >=0 and i<img.shape[0] and j<img.shape[1]):
-                   neighbours.append([i,j])
-        return neighbours 
-    
-    def getNeighboursAvg(neighbours,imageT):
-        avg = 0
-        
-        for ngb in neighbours:
-            # print(ngb[0])
-            # print(ngb[1])
-            #  print(imageT[int(ngb[1])][int(ngb[0])])
-            avg = avg + imageT[int(ngb[1])][int(ngb[0])])
-        # print("kon")
-        return avg/len(neighbours)
-
-    for x in range(len(imageT)):
-        for y in range(len(imageT)):
-            filtered_image[x][y] = getNeighboursAvg(getNeighbours(x,y),imageT)
-    return filtered_image
-
+def unsharpMasking(vector,mask):
+    tmp_vec = vector.copy()
+    for i in range(1,len(vector)-1):
+            tmp_vec[i] = vector[i]*mask[1]+ vector[i-1]*mask[0] +vector[i+1] * mask[2]
+    return normalize(tmp_vec)
 
 def getValues(emitter, detectors):
     values = []
@@ -148,11 +126,9 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
 
     for i in range(iterations):
         positions = getPositions(angles[i], detectors, detectorsAngle)
-        col = sinogram[:, i]
+        col = sinogram[:,i] if filtered else unsharpMasking(sinogram[:,i],[-2,5,-2])
         addValue(positions[0], positions[1:], col)
     
-    if filtered :
-        image = unsharpMasking(image)
     normalizeArray(image)
 
     return image
@@ -205,7 +181,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
 
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
-    image = getInverse(sinogram, iterations, detectorsAngle, 1)
+    image = getInverse(sinogram, iterations, detectorsAngle, True)
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
@@ -232,7 +208,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
     ax3.set_title("Sinogram (mask)")
     ax3.set_xlabel("Iteration number")
     ax3.set_ylabel("Detector number")
-    ax3.imshow([unsharpMasking(vector)
+    ax3.imshow([unsharpMasking(vector,[-2,5,-2])
                 for vector in sinogram], cmap=plt.cm.Greys_r)
 
     #ax4.imshow(ds.pixel_array,cmap=plt.cm.Greys_r) # Wczytany plik
