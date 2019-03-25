@@ -58,11 +58,14 @@ def normalize(vector):
 
 
 def normalizeArray(arr):
-    vector = []
+    rowMax = 0
     for row in arr:
-        vector.extend(row)
-    maxValue = max(vector)
-    return [x / maxValue if maxValue != 0 and x >= 0 else 0 for x in vector]
+        if max(row) > rowMax:
+            rowMax = max(row)
+    for row in arr:
+        for x in row:
+            x /= rowMax if rowMax > 0 else 0
+    return arr
 
 
 def unsharpMasking(vector, mask):
@@ -70,7 +73,7 @@ def unsharpMasking(vector, mask):
     for i in range(1, len(vector)-1):
         tmp_vec[i] = vector[i]*mask[1] + vector[i-1] * \
             mask[0] + vector[i+1] * mask[2]
-    return normalize(tmp_vec)
+    return tmp_vec
 
 
 def getValues(emitter, detectors):
@@ -134,7 +137,6 @@ def getInverse(sinogram, iterations, detectorsAngle, filtered):
         addValue(positions[0], positions[1:], col)
 
     normalizeArray(image)
-
     return image
 
 
@@ -187,7 +189,7 @@ def drawSinogram(detectors, detectorsAngle, iterations):
 
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
-    image = getInverse(sinogram, iterations, detectorsAngle, True)
+    image = getInverse(sinogram, iterations, detectorsAngle, False)
 
     mse = np.square(np.subtract(img, image)).mean()
 
@@ -280,7 +282,7 @@ def animateInverse(detectors, detectorsAngle, iterations):
 
     sinogram = np.array(getSinogram(
         detectors, detectorsAngle, iterations)).transpose()
-    image = getInverse(sinogram, iterations, detectorsAngle, 0)
+    image = getInverse(sinogram, iterations, detectorsAngle, 1)
     blankImg = np.zeros([img.shape[0], img.shape[1]])
 
     aniFig, ((axSin, axAni), (axImg, axImgInv)
