@@ -22,6 +22,10 @@ def dilatate(img):
     return img
 
 
+def gamma(img, gamma):
+    return exposure.adjust_gamma(img, gamma)
+
+
 def grayOut(img):
     hsv = rgb2hsv(img)
     hsv[:, :, 1] = 0
@@ -54,23 +58,35 @@ def threshCanal(img, canal=1, threshValue=50):
 def detectEdges(img, sigma=3):
     return ski.feature.canny(img, sigma)
 
+# Do poprawki i przemyślenia czy ma sens
+def reduceBrightAreas(img, divider=2, rThresh=0.8, gThresh=0.8, bThresh=0.8):
+    outputImg = img.copy()
+    for i in range(len(outputImg)):
+        for j in range(len(outputImg[i])):
+            if outputImg[i][j][0] >= rThresh and outputImg[i][j][1] >= gThresh and outputImg[i][j][2] >= bThresh:
+                outputImg[i][j] = [x / divider for x in outputImg[i][j]]
+    return outputImg
+
 
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
            str(x) + '_h.jpg' for x in range(1, 16)]
 
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
 
-img = getRawImage(hrfImgs[0])
+img = getRawImage(hrfImgs[2])
 
-img[:, :, 0] = 0
 
 # img = threshCanal(img)
 # img = threshRGB(img, 100, 50, 45)
 # img = grayOut(img)
-img = contrast(img)
+
+# Wyzerowanie kanału R i kontrast
+img[:, :, 0] = 0
+img = contrast(img, 0.4, 95)
 
 # ax1.imshow(contrast(img))
 ax1.imshow(img)
-ax2.imshow(dilatate(grayOut(img)))
+ax2.imshow(detectEdges(grayOut(img), 1))
+# ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
 plt.show()
