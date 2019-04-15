@@ -58,6 +58,12 @@ def threshCanal(img, canal=1, threshValue=50):
 def detectEdges(img, sigma=3):
     return ski.feature.canny(img, sigma)
 
+
+def invertImage(img):
+    img = np.array(img, dtype=np.uint8)
+    return cv2.bitwise_not(img)
+
+
 # Do poprawki i przemyślenia czy ma sens
 def reduceBrightAreas(img, divider=2, rThresh=0.8, gThresh=0.8, bThresh=0.8):
     outputImg = img.copy()
@@ -73,7 +79,7 @@ hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
 
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
 
-img = getRawImage(hrfImgs[2])
+img = getRawImage(hrfImgs[5])
 
 
 # img = threshCanal(img)
@@ -84,9 +90,12 @@ img = getRawImage(hrfImgs[2])
 img[:, :, 0] = 0
 img = contrast(img, 0.4, 95)
 
+edgesImg = detectEdges(grayOut(img), 1)
+# edgesImg = invertImage(edgesImg)
+
 # ax1.imshow(contrast(img))
 ax1.imshow(img)
-ax2.imshow(detectEdges(grayOut(img), 1))
+ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
 # ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
 plt.show()
