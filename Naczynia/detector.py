@@ -64,14 +64,34 @@ def invertImage(img):
     return cv2.bitwise_not(img)
 
 
-# Do poprawki i przemyślenia czy ma sens
-def reduceBrightAreas(img, divider=2, rThresh=0.8, gThresh=0.8, bThresh=0.8):
-    outputImg = img.copy()
-    for i in range(len(outputImg)):
-        for j in range(len(outputImg[i])):
-            if outputImg[i][j][0] >= rThresh and outputImg[i][j][1] >= gThresh and outputImg[i][j][2] >= bThresh:
-                outputImg[i][j] = [x / divider for x in outputImg[i][j]]
-    return outputImg
+def parseType(img):
+    if(np.dtype(img[0][0]) == bool):
+        return img.astype(int)
+    if(str(np.dtype(img[0][0])) == 'uint8'):
+        return img.astype(bool).astype(int)
+
+
+def getAccuracy(detected, reference):
+    detected = detected.astype(int)
+    reference = reference.astype(bool).astype(int)
+    counter = 0
+    for y in range(detected.shape[0]):
+        for x in range(detected.shape[1]):
+            if(detected[y][x] == reference[y][x]):
+                counter += 1
+    print('Accuracy = ', counter / (len(detected[0]) * len(detected[1])))
+
+
+def getSensitivity(detected, reference):
+    counter = 0
+    for y in range(detected.shape[0]):
+        for x in range(detected.shape[1]):
+            if(detected[y][x] == 1 and reference[y][x] == 1):
+                counter += 1
+            # elif(detected[y][x] == 1):
+            #     counter -= 1
+            
+    print('Sensitivity = ', counter / (len(detected[0]) * len(detected[1])))
 
 
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
@@ -80,7 +100,7 @@ hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
 imgs = ['ref/' + str(x) + '.ppm' for x in range(1, 6)]
 ref = ['ref/' + str(x) + '_ref.ppm' for x in range(1, 6)]
 
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
 # img = getRawImage(hrfImgs[5])
 img = getRawImage(imgs[4])
@@ -95,11 +115,15 @@ img[:, :, 0] = 0
 img = contrast(img, 0.4, 95)
 # img = threshRGB(img, 0, 150, 145)
 
-edgesImg = detectEdges(grayOut(img), 2)
+edgesImg = parseType(detectEdges(grayOut(img), 2))
+refImage = parseType(getRawImage(ref[4]))
 
-# ax1.imshow(contrast(img))
 ax1.imshow(img)
 ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
+ax3.imshow(refImage, cmap=plt.cm.Greys_r)
+getAccuracy(edgesImg, refImage)
+getSensitivity(edgesImg, refImage)
+
 # ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
-plt.show()
+# plt.show()
