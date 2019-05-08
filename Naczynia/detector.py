@@ -77,9 +77,13 @@ def reduceBrightAreas(img, divider=2, rThresh=0.8, gThresh=0.8, bThresh=0.8):
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
            str(x) + '_h.jpg' for x in range(1, 16)]
 
+imgs = ['ref/' + str(x) + '.ppm' for x in range(1, 6)]
+ref = ['ref/' + str(x) + '_ref.ppm' for x in range(1, 6)]
+
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
 
-img = getRawImage(hrfImgs[5])
+# img = getRawImage(hrfImgs[5])
+img = getRawImage(imgs[4])
 
 
 # img = threshCanal(img)
@@ -89,9 +93,9 @@ img = getRawImage(hrfImgs[5])
 # Wyzerowanie kanału R i kontrast
 img[:, :, 0] = 0
 img = contrast(img, 0.4, 95)
+# img = threshRGB(img, 0, 150, 145)
 
-edgesImg = detectEdges(grayOut(img), 1)
-# edgesImg = invertImage(edgesImg)
+edgesImg = detectEdges(grayOut(img), 2)
 
 # ax1.imshow(contrast(img))
 ax1.imshow(img)
