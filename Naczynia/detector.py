@@ -74,24 +74,36 @@ def parseType(img):
 def getAccuracy(detected, reference):
     detected = detected.astype(int)
     reference = reference.astype(bool).astype(int)
-    counter = 0
+    TPTN = 0
     for y in range(detected.shape[0]):
         for x in range(detected.shape[1]):
             if(detected[y][x] == reference[y][x]):
-                counter += 1
-    print('Accuracy = ', counter / (len(detected[0]) * len(detected[1])))
+                TPTN += 1
+    print('Accuracy = ', TPTN / (len(detected[0]) * len(detected[1])))
 
 
 def getSensitivity(detected, reference):
-    counter = 0
+    TP = 0
+    FN = 0
     for y in range(detected.shape[0]):
         for x in range(detected.shape[1]):
             if(detected[y][x] == 1 and reference[y][x] == 1):
-                counter += 1
-            # elif(detected[y][x] == 1):
-            #     counter -= 1
-            
-    print('Sensitivity = ', counter / (len(detected[0]) * len(detected[1])))
+                TP += 1
+            elif(reference[y][x] == 1):
+                FN += 1
+    print('Sensitivity = ', TP / (TP + FN))
+
+
+def getSpecificity(detected, reference):
+    TN = 0
+    FP = 0
+    for y in range(detected.shape[0]):
+        for x in range(detected.shape[1]):
+            if(detected[y][x] == 0 and reference[y][x] == 0):
+                TN += 1
+            elif(detected[y][x] == 1):
+                FP += 1
+    print('Specificity = ', TN / (TN + FP))
 
 
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
@@ -123,6 +135,7 @@ ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
 ax3.imshow(refImage, cmap=plt.cm.Greys_r)
 getAccuracy(edgesImg, refImage)
 getSensitivity(edgesImg, refImage)
+getSpecificity(edgesImg, refImage)
 
 # ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
