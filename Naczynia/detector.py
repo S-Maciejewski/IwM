@@ -7,6 +7,7 @@ import skimage as ski
 import numpy as np
 import cv2
 
+
 def contrast(img, minVal=0.28, maxVal=98):
     MIN = np.percentile(img, minVal)
     MAX = np.percentile(img, maxVal)
@@ -108,19 +109,27 @@ def getSpecificity(detected, reference):
 
 def printMeans(sensitivity, specificity):
     print('Mean of sens. and spec. = ', (sensitivity + specificity) / 2)
-    print('Geometric mean of sens. and spec. = ', (sensitivity * specificity) ** (0.5))
+    print('Geometric mean of sens. and spec. = ',
+          (sensitivity * specificity) ** (0.5))
 
 
 def printMeasures(detected, reference):
     accuracy = getAccuracy(detected, reference)
     sensitivity = getSensitivity(detected, reference)
     specificity = getSpecificity(detected, reference)
-    
+
     print('\nAccuracy = ', accuracy)
     print('Sensitivity = ', sensitivity)
     print('Specificity = ', specificity)
     printMeans(sensitivity, specificity)
 
+
+def getErrorMatrix(detected, reference):
+    matrix = np.zeros([detected.shape[0], detected.shape[1]], dtype=int)
+    for y in range(matrix.shape[0]):
+        for x in range(matrix.shape[1]):
+            matrix[y][x] = 0 if detected[y][x] == reference[y][x] else 1
+    return matrix
 
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
            str(x) + '_h.jpg' for x in range(1, 16)]
@@ -145,12 +154,14 @@ img = contrast(img, 0.4, 95)
 
 edgesImg = parseType(detectEdges(grayOut(img), 2))
 refImage = parseType(getRawImage(ref[4]))
+errorMatrix = getErrorMatrix(edgesImg, refImage)
 
 ax1.imshow(img)
 ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
 ax3.imshow(refImage, cmap=plt.cm.Greys_r)
+ax4.imshow(errorMatrix, cmap=plt.cm.Greys_r)
 printMeasures(edgesImg, refImage)
 
 # ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
-# plt.show()
+plt.show()
