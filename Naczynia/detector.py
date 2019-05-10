@@ -1,11 +1,11 @@
 from skimage import data, io, filters, exposure, measure, color, feature
 from skimage.color import rgb2hsv, hsv2rgb, rgb2gray
+from functools import reduce
 import skimage.morphology as mp
 import matplotlib.pyplot as plt
 import skimage as ski
 import numpy as np
 import cv2
-
 
 def contrast(img, minVal=0.28, maxVal=98):
     MIN = np.percentile(img, minVal)
@@ -79,7 +79,7 @@ def getAccuracy(detected, reference):
         for x in range(detected.shape[1]):
             if(detected[y][x] == reference[y][x]):
                 TPTN += 1
-    print('Accuracy = ', TPTN / (len(detected[0]) * len(detected[1])))
+    return(TPTN / (len(detected[0]) * len(detected[1])))
 
 
 def getSensitivity(detected, reference):
@@ -91,7 +91,7 @@ def getSensitivity(detected, reference):
                 TP += 1
             elif(reference[y][x] == 1):
                 FN += 1
-    print('Sensitivity = ', TP / (TP + FN))
+    return(TP / (TP + FN))
 
 
 def getSpecificity(detected, reference):
@@ -103,7 +103,23 @@ def getSpecificity(detected, reference):
                 TN += 1
             elif(detected[y][x] == 1):
                 FP += 1
-    print('Specificity = ', TN / (TN + FP))
+    return(TN / (TN + FP))
+
+
+def printMeans(sensitivity, specificity):
+    print('Mean of sens. and spec. = ', (sensitivity + specificity) / 2)
+    print('Geometric mean of sens. and spec. = ', (sensitivity * specificity) ** (0.5))
+
+
+def printMeasures(detected, reference):
+    accuracy = getAccuracy(detected, reference)
+    sensitivity = getSensitivity(detected, reference)
+    specificity = getSpecificity(detected, reference)
+    
+    print('\nAccuracy = ', accuracy)
+    print('Sensitivity = ', sensitivity)
+    print('Specificity = ', specificity)
+    printMeans(sensitivity, specificity)
 
 
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
@@ -133,9 +149,7 @@ refImage = parseType(getRawImage(ref[4]))
 ax1.imshow(img)
 ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
 ax3.imshow(refImage, cmap=plt.cm.Greys_r)
-getAccuracy(edgesImg, refImage)
-getSensitivity(edgesImg, refImage)
-getSpecificity(edgesImg, refImage)
+printMeasures(edgesImg, refImage)
 
 # ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
 
