@@ -56,7 +56,7 @@ def threshCanal(img, canal=1, threshValue=50):
     return threshImg
 
 
-def detectEdges(img, sigma=3):
+def detectEdges(img, sigma=1):
     return ski.feature.canny(img, sigma)
 
 
@@ -122,6 +122,7 @@ def printMeasures(detected, reference):
     print('Sensitivity = ', sensitivity)
     print('Specificity = ', specificity)
     printMeans(sensitivity, specificity)
+    print('\n')
 
 
 def getErrorMatrix(detected, reference):
@@ -131,37 +132,41 @@ def getErrorMatrix(detected, reference):
             matrix[y][x] = 0 if detected[y][x] == reference[y][x] else 1
     return matrix
 
+
 hrfImgs = ['hrf/0' + str(x) + '_h.jpg' if x < 10 else 'hrf/' +
            str(x) + '_h.jpg' for x in range(1, 16)]
 
 imgs = ['ref/' + str(x) + '.ppm' for x in range(1, 6)]
 ref = ['ref/' + str(x) + '_ref.ppm' for x in range(1, 6)]
 
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+fig, ((ax1, ax3), (ax2, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
-# img = getRawImage(hrfImgs[5])
+
 img = getRawImage(imgs[4])
 
-
-# img = threshCanal(img)
-# img = threshRGB(img, 100, 50, 45)
-# img = grayOut(img)
 
 # Wyzerowanie kanału R i kontrast
 img[:, :, 0] = 0
 img = contrast(img, 0.4, 95)
-# img = threshRGB(img, 0, 150, 145)
 
-edgesImg = parseType(detectEdges(grayOut(img), 2))
+
+edgesImg = detectEdges(grayOut(img))
+dilationImg2 = parseType(ski.morphology.dilation(
+    edgesImg, ski.morphology.disk(2)))
+dilationImg3 = parseType(ski.morphology.dilation(
+    edgesImg, ski.morphology.disk(3)))
 refImage = parseType(getRawImage(ref[4]))
-errorMatrix = getErrorMatrix(edgesImg, refImage)
+errorMatrix = getErrorMatrix(dilationImg2, refImage)
+
 
 ax1.imshow(img)
-ax2.imshow(edgesImg, cmap=plt.cm.Greys_r)
+ax2.imshow(dilationImg2, cmap=plt.cm.Greys_r)
 ax3.imshow(refImage, cmap=plt.cm.Greys_r)
+# ax4.imshow(dilationImg3, cmap=plt.cm.Greys_r)
 ax4.imshow(errorMatrix, cmap=plt.cm.Greys_r)
-printMeasures(edgesImg, refImage)
+printMeasures(dilationImg2, refImage)
+printMeasures(dilationImg3, refImage)
 
-# ax2.imshow(reduceBrightAreas(img, 2, 0, 0.7, 0.7))
+
 
 plt.show()
