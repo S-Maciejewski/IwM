@@ -17,24 +17,26 @@ class Patient {
     }
 }
 
-function getPatientData(id) {
-    return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + '/_history/1?_format=json')
+async function getPatientData(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + '/_history/1?_format=json');
 }
 
-async function getPatient(id){
+async function getPatient(id) {
     await getPatientData(id).then(res => {
         res = JSON.parse(res)
-        // console.log(res);
         patient = new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender, res.birthDate, res.active)
     })
-    console.log(patient)
-    return patient
+    console.log('Patient ', id, 'retrieved from server successfully');
+    return patient;
 }
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/getPatient', (req, res) => res.send(getPatient(1656954)));
+app.get('/getPatient', (req, res) => {
+    getPatient(req.query.id).then(patient => {
+        res.json(patient);
+    });
+});
 
-app.listen(port, () => console.log(`Notes server listening on port ${port}!`));
+app.listen(port, () => console.log(`Node server listening on port ${port}`));
