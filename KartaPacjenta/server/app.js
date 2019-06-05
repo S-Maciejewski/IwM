@@ -30,9 +30,14 @@ const medicationStatementIDs = [
     1952182,
 ]
 
+const medicationIDs = [
+    1946955,
+]
+
 var patients = [];
 var observations = [];
 var statements = [];
+var medications = [];
 
 class Patient {
     constructor(id, versionId, lastUpdated, gender, birthDate, active, name, surname, address, city) {
@@ -72,6 +77,15 @@ class MedicationStatement {
     }
 }
 
+class Medication {
+    constructor(id, code, display, status) {
+        this.id = id;
+        this.code = code;
+        this.display = display;
+        this.status = status;
+    }
+}
+
 async function getPatientData(id) {
     // return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + '/_history/' + version);  // Pobieranie wybranej wersji (czy implementujemy?)
     return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id);
@@ -83,6 +97,10 @@ async function getObservationData(id) {
 
 async function getStatementData(id) {
     return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id);
+}
+
+async function getMedicationData(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/Medication/' + id);
 }
 
 function validatePatient(id, res) {
@@ -109,28 +127,34 @@ function validateStatement(id, res) {
         res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
 }
 
+function validateMedication(id, res) {
+    res = JSON.parse(res);
+    return new Medication(id, res.code && res.code.coding[0] ? res.code.coding[0].code : '',
+        res.code && res.code.coding[0] ? res.code.coding[0].display : '', res.status);
+}
+
 async function getPatient(id) {
-    await getPatientData(id).then(res => {
-        patient = validatePatient(id, res);
-    });
+    await getPatientData(id).then(res => patient = validatePatient(id, res));
     console.log(`Patient ${id} retrieved from server successfully`);
     return [patient];
 }
 
 async function getObservation(id) {
-    await getObservationData(id).then(res => {
-        observation = validateObservation(id, res);
-    });
+    await getObservationData(id).then(res => observation = validateObservation(id, res));
     console.log(`Observation ${id} retrieved from server successfully`);
     return [observation];
 }
 
 async function getStatement(id) {
-    await getStatementData(id).then(res => {
-        stmt = validateStatement(id, res);
-    });
+    await getStatementData(id).then(res => stmt = validateStatement(id, res));
     console.log(`Medication statement ${id} retrieved from server successfully`);
     return [stmt];
+}
+
+async function getMedication(id) {
+    await getMedicationData(id).then(res => medication = validateMedication(id, res));
+    console.log(`Medication ${id} retrieved from server successfully`);
+    return [medication];
 }
 
 function getPatientPromise(id) {
@@ -151,6 +175,13 @@ function getStatementPromise(id) {
     return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id).then(res => {
         stmt = validateStatement(id, res);
         statements.push(stmt);
+    })
+}
+
+function getMedicatioPromise(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/Medication/' + id).then(res => {
+        medication = validateMedication(id, res);
+        medications.push(medication);
     })
 }
 
@@ -175,6 +206,13 @@ function getStatementPromises() {
     return Promise.all(promises);
 }
 
+function getMedicatioPromises() {
+    medications = [];
+    promises = [];
+    medicationIDs.forEach(id => promises.push(getMedicatioPromise(id)));
+    return Promise.all(promises);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -195,5 +233,11 @@ app.get('/getStatement', (req, res) => getStatement(req.query.id).then(stmt => r
 app.get('/getStatementIDs', (req, res) => res.json(medicationStatementIDs));
 
 app.get('/getStatements', (req, res) => getStatementPromises().then(() => res.json(statements)));
+
+app.get('/getMedication', (req, res) => getMedication(req.query.id).then(medication => res.json(medication)));
+
+app.get('/getMedicationIDs', (req, res) => res.json(medicationIDs));
+
+app.get('/getMedications', (req, res) => getMedicatioPromises().then(() => res.json(medications)));
 
 app.listen(port, () => console.log(`Node server listening on port ${port}`));
