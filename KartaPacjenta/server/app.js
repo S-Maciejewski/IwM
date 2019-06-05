@@ -90,7 +90,7 @@ async function getPatient(id) {
             res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
     });
     console.log(`Patient ${id} retrieved from server successfully`);
-    return patient;
+    return [patient];
 }
 
 async function getObservation(id) {
@@ -102,7 +102,7 @@ async function getObservation(id) {
         res.valueQuantity && res.valueQuantity.unit ? res.valueQuantity.unit : '');
     });
     console.log(`Observation ${id} retrieved from server successfully`);
-    return observation;
+    return [observation];
 }
 
 async function getStatement(id) {
@@ -114,7 +114,7 @@ async function getStatement(id) {
         res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
     });
     console.log(`Medication statement ${id} retrieved from server successfully`);
-    return stmt;
+    return [stmt];
 }
 
 app.use(express.json());
