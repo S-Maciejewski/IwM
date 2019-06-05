@@ -30,7 +30,9 @@ const medicationStatementIDs = [
     1952182,
 ]
 
-var patients = []
+var patients = [];
+var observations = [];
+var statements = [];
 
 class Patient {
     constructor(id, versionId, lastUpdated, gender, birthDate, active, name, surname, address, city) {
@@ -83,13 +85,33 @@ async function getStatementData(id) {
     return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id);
 }
 
+function validatePatient(id, res) {
+    res = JSON.parse(res);
+    return new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender ? res.gender : '',
+        res.birthDate ? res.birthDate : '', res.active ? res.active : '',
+        res.name && res.name[0] ? res.name[0].given[0] : '', res.name && res.name[0] ? res.name[0].family : '',
+        res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
+}
+
+function validateObservation(id, res) {
+    res = JSON.parse(res);
+    return new Observation(id, res.code && res.code.text ? res.code.text : '',
+        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
+        res.issued, res.valueQuantity && res.valueQuantity.value ? res.valueQuantity.value : '',
+        res.valueQuantity && res.valueQuantity.unit ? res.valueQuantity.unit : '');
+}
+
+function validateStatement(id, res) {
+    res = JSON.parse(res);
+    return new MedicationStatement(id, res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
+        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
+        res.dosage[0] ? res.dosage[0].text : '', res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.value : '',
+        res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
+}
+
 async function getPatient(id) {
     await getPatientData(id).then(res => {
-        res = JSON.parse(res);
-        patient = new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender ? res.gender : '',
-            res.birthDate ? res.birthDate : '', res.active ? res.active : '',
-            res.name && res.name[0] ? res.name[0].given[0] : '', res.name && res.name[0] ? res.name[0].family : '',
-            res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
+        patient = validatePatient(id, res);
     });
     console.log(`Patient ${id} retrieved from server successfully`);
     return [patient];
@@ -97,11 +119,7 @@ async function getPatient(id) {
 
 async function getObservation(id) {
     await getObservationData(id).then(res => {
-        res = JSON.parse(res);
-        observation = new Observation(id, res.code && res.code.text ? res.code.text : '', 
-        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
-        res.issued, res.valueQuantity && res.valueQuantity.value ? res.valueQuantity.value : '',
-        res.valueQuantity && res.valueQuantity.unit ? res.valueQuantity.unit : '');
+        observation = validateObservation(id, res);
     });
     console.log(`Observation ${id} retrieved from server successfully`);
     return [observation];
@@ -109,11 +127,7 @@ async function getObservation(id) {
 
 async function getStatement(id) {
     await getStatementData(id).then(res => {
-        res = JSON.parse(res);
-        stmt = new MedicationStatement(id, res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
-        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
-        res.dosage[0] ? res.dosage[0].text : '', res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.value : '',
-        res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
+        stmt = validateStatement(id, res);
     });
     console.log(`Medication statement ${id} retrieved from server successfully`);
     return [stmt];
@@ -121,51 +135,65 @@ async function getStatement(id) {
 
 function getPatientPromise(id) {
     return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id).then(res => {
-        res = JSON.parse(res);
-        patient = new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender ? res.gender : '',
-            res.birthDate ? res.birthDate : '', res.active ? res.active : '',
-            res.name && res.name[0] ? res.name[0].given[0] : '', res.name && res.name[0] ? res.name[0].family : '',
-            res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
+        patient = validatePatient(id, res);
         patients.push(patient);
+    })
+}
+
+function getObservationPromise(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/Observation/' + id).then(res => {
+        observation = validateObservation(id, res);
+        observations.push(observation);
+    })
+}
+
+function getStatementPromise(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id).then(res => {
+        stmt = validateStatement(id, res);
+        statements.push(stmt);
     })
 }
 
 function getPatientPromises() {
     patients = [];
     promises = [];
-    patientIDs.forEach(id => {
-        promises.push(getPatientPromise(id));
-    })
+    patientIDs.forEach(id => promises.push(getPatientPromise(id)));
+    return Promise.all(promises);
+}
+
+function getObservationPromises() {
+    observations = [];
+    promises = [];
+    observationIDs.forEach(id => promises.push(getObservationPromise(id)));
+    return Promise.all(promises);
+}
+
+function getStatementPromises() {
+    statements = [];
+    promises = [];
+    medicationStatementIDs.forEach(id => promises.push(getStatementPromise(id)));
     return Promise.all(promises);
 }
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/getPatient', (req, res) => {
-    getPatient(req.query.id).then(patient => {
-        res.json(patient);
-    });
-});
+app.get('/getPatient', (req, res) => getPatient(req.query.id).then(patient => res.json(patient)));
 
 app.get('/getPatientIDs', (req, res) => res.json(patientIDs));
 
 app.get('/getPatients', (req, res) => getPatientPromises().then(() => res.json(patients)));
 
-app.get('/getObservation', (req, res) => {
-    getObservation(req.query.id).then(observation => {
-        res.json(observation);
-    });
-});
+app.get('/getObservation', (req, res) => getObservation(req.query.id).then(observation => res.json(observation)));
 
 app.get('/getObservationIDs', (req, res) => res.json(observationIDs));
 
-app.get('/getStatement', (req, res) => {
-    getStatement(req.query.id).then(stmt => {
-        res.json(stmt);
-    });
-});
+app.get('/getObservations', (req, res) => getObservationPromises().then(() => res.json(observations)));
+
+app.get('/getStatement', (req, res) => getStatement(req.query.id).then(stmt => res.json(stmt)));
 
 app.get('/getStatementIDs', (req, res) => res.json(medicationStatementIDs));
+
+app.get('/getStatements', (req, res) => getStatementPromises().then(() => res.json(statements)));
 
 app.listen(port, () => console.log(`Node server listening on port ${port}`));
