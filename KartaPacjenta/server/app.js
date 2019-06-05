@@ -43,7 +43,7 @@ async function getPatient(id) {
             res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
     })
     console.log(`Patient ${id} retrieved from server successfully`);
-    return patient;
+    return [patient];
 }
 
 app.use(express.json());
