@@ -14,13 +14,20 @@ const patientIDs = [
     // z obserwacjami
     1909448, // obserwacja 1909478
     295670, // obserwacja 295694
-
+    // z medication statementami
+    1952851, // statement 1952915
 ]
 
 const observationIDs = [
     1909478, // pacjent 1909448
     434055, // bez pacjenta
     295694, // pacjent 295670
+]
+
+const medicationStatementIDs = [
+    1952915, // pacjent 1952851
+    1952838,
+    1952182,
 ]
 
 class Patient {
@@ -49,6 +56,18 @@ class Observation {
     }
 }
 
+class MedicationStatement {
+    constructor(id, text, subjectID, dosageText, dosage, unit, status) {
+        this.id = id;
+        this.text = text;
+        this.subjectID = subjectID;
+        this.dosageText = dosageText;
+        this.dosage = dosage;
+        this.unit = unit;
+        this.status = status;
+    }
+}
+
 async function getPatientData(id) {
     // return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + '/_history/' + version);  // Pobieranie wybranej wersji (czy implementujemy?)
     return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id);
@@ -56,6 +75,10 @@ async function getPatientData(id) {
 
 async function getObservationData(id) {
     return rp('http://hapi.fhir.org/baseDstu3/Observation/' + id);
+}
+
+async function getStatementData(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id);
 }
 
 async function getPatient(id) {
@@ -82,6 +105,18 @@ async function getObservation(id) {
     return observation;
 }
 
+async function getStatement(id) {
+    await getStatementData(id).then(res => {
+        res = JSON.parse(res);
+        stmt = new MedicationStatement(id, res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
+        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
+        res.dosage[0] ? res.dosage[0].text : '', res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.value : '',
+        res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
+    });
+    console.log(`Medication statement ${id} retrieved from server successfully`);
+    return stmt;
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -100,5 +135,13 @@ app.get('/getObservation', (req, res) => {
 });
 
 app.get('/getObservationIDs', (req, res) => res.json(observationIDs));
+
+app.get('/getStatement', (req, res) => {
+    getStatement(req.query.id).then(stmt => {
+        res.json(stmt);
+    });
+});
+
+app.get('/getStatementIDs', (req, res) => res.json(medicationStatementIDs));
 
 app.listen(port, () => console.log(`Node server listening on port ${port}`));
