@@ -90,7 +90,31 @@ async function getPatient(id) {
             res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
     });
     console.log(`Patient ${id} retrieved from server successfully`);
-    return patient;
+    return [patient];
+}
+
+async function getObservation(id) {
+    await getObservationData(id).then(res => {
+        res = JSON.parse(res);
+        observation = new Observation(id, res.code && res.code.text ? res.code.text : '', 
+        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
+        res.issued, res.valueQuantity && res.valueQuantity.value ? res.valueQuantity.value : '',
+        res.valueQuantity && res.valueQuantity.unit ? res.valueQuantity.unit : '');
+    });
+    console.log(`Observation ${id} retrieved from server successfully`);
+    return [observation];
+}
+
+async function getStatement(id) {
+    await getStatementData(id).then(res => {
+        res = JSON.parse(res);
+        stmt = new MedicationStatement(id, res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
+        res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
+        res.dosage[0] ? res.dosage[0].text : '', res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.value : '',
+        res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
+    });
+    console.log(`Medication statement ${id} retrieved from server successfully`);
+    return [stmt];
 }
 
 app.use(express.json());
