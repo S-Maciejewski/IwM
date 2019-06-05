@@ -30,6 +30,8 @@ const medicationStatementIDs = [
     1952182,
 ]
 
+var patients = []
+
 class Patient {
     constructor(id, versionId, lastUpdated, gender, birthDate, active, name, surname, address, city) {
         this.id = id;
@@ -117,6 +119,26 @@ async function getStatement(id) {
     return [stmt];
 }
 
+function getPatientPromise(id) {
+    return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id).then(res => {
+        res = JSON.parse(res);
+        patient = new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender ? res.gender : '',
+            res.birthDate ? res.birthDate : '', res.active ? res.active : '',
+            res.name && res.name[0] ? res.name[0].given[0] : '', res.name && res.name[0] ? res.name[0].family : '',
+            res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
+        patients.push(patient);
+    })
+}
+
+function getPatientPromises() {
+    patients = [];
+    promises = [];
+    patientIDs.forEach(id => {
+        promises.push(getPatientPromise(id));
+    })
+    return Promise.all(promises);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -127,6 +149,8 @@ app.get('/getPatient', (req, res) => {
 });
 
 app.get('/getPatientIDs', (req, res) => res.json(patientIDs));
+
+app.get('/getPatients', (req, res) => getPatientPromises().then(() => res.json(patients)));
 
 app.get('/getObservation', (req, res) => {
     getObservation(req.query.id).then(observation => {
