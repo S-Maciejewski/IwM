@@ -4,6 +4,7 @@ import './App.css';
 import List from '../List/List';
 
 
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -64,9 +65,12 @@ class App extends React.Component {
 
       return (
         <div className="App">
-          <section className="section">
+          <div className="App-header">
+            Karta Pacjenta
+          </div>
+          <div className="App-main">
             <List items={this.state.allPatients} />
-          </section>
+          </div>
         </div>
       );
     }

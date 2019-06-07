@@ -1,0 +1,11 @@
+.input{
+    min-width: 15%;
+    width: 30%;
+    max-width: 30%;
+    border: 1px solid #999;
+    border-radius: 10px;
+    background-color: deepskyblue;
+    padding-inline-start: 10px;
+    
+}
+

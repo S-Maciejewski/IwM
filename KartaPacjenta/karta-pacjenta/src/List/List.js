@@ -1,6 +1,6 @@
 import React from 'react';
 import './List.css';
-import * as ReactBootstrap from 'react-bootstrap';
+import Button from 'react-bootstrap/Button';
 
 class List extends React.Component {
   constructor(props) {
@@ -268,20 +268,20 @@ class List extends React.Component {
             {patient.active ? 'Active' : 'Not active'}
           </div>
           <div>
-            {'Address: '} {patient.name} {', '} {patient.city}
+            {'Address: '} {patient.address} {patient.address==='' ? '':', '} {patient.city}
           </div>
-          <ReactBootstrap.Button className="secondary" id="obsBtn" onClick={this.showObservation}>Show observation</ReactBootstrap.Button>
+          <Button className="secondary" id="obsBtn" onClick={this.showObservation}>Show observation</Button>
          
-          <ReactBootstrap.Button className="secondary" id="medBtn" onClick={this.showStatement}>Show statement</ReactBootstrap.Button>
+          <Button className="secondary" id="medBtn" onClick={this.showStatement}>Show statement</Button>
           
-          <ReactBootstrap.Button className="secondary" id="stateBtn" onClick={this.showMedication}>Show medication</ReactBootstrap.Button>
+          <Button className="secondary" id="stateBtn" onClick={this.showMedication}>Show medication</Button>
           
         </div>
         <div>
         {this.state.isObservation ? this.observationPage(this.id) : null}
         {this.state.isStatement ? this.statementPage(this.id) : null}
         {this.state.isMedication ? this.medicationPage(this.id) : null}
-          <ReactBootstrap.Button onClick={this.showList} className="secondary">Back to menu</ReactBootstrap.Button>
+          <Button onClick={this.showList} className="secondary">Back to menu</Button>
         </div>
       </div>
     )
@@ -289,16 +289,18 @@ class List extends React.Component {
 
   render() {
     var menuList = (<div className="List">
+      <div className="container">
       <input type="text" className="input" onChange={this.handleChange} placeholder="Search..." />
       <div>Lista pacjentów:</div>
       <ul>
         {this.state.filtered.map(item => (
           <li key={item.id}>
             {item.name}{" "}{item.surname}{" "}
-            <ReactBootstrap.Button onClick={() => this.showDetails(item.id)} className="secondary">Details</ReactBootstrap.Button>
+            <Button size = "sm" onClick={() => this.showDetails(item.id)} className='listBtn'variant="info">Details</Button>
           </li>
         ))}
       </ul>
+    </div>
     </div>);
 
     return (
