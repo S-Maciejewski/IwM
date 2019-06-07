@@ -1,74 +1,72 @@
 import React from 'react';
 import logo from '../logo.svg';
 import './App.css';
+import List from '../List/List';
 
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.allPatient = [];
+    this.allPatients = [];
 
     this.state = {
       isFetched: false,
-      allPatientIDs: [],
+      allPatients: [],
     };
 
-    this.fetchPatientIDs = this.fetchPatientIDs.bind(this);
     this.fetchPatient = this.fetchPatient.bind(this);
   }
 
   componentDidMount() {
-    this.fetchPatientIDs();
+    this.fetchPatient();
   }
 
-  fetchPatientIDs() {
-    // fetch('http://localhost:8000/getPatient/?id=1656300')
-    fetch('http://localhost:8000/getPatientIDs')
-      .then(response => response.json())
-      .then(json => {
 
+  fetchPatient() {
+    fetch(`http://localhost:8000/getPatients`)
+      .then(response => response.json())
+      .then(data => {
+        this.allPatients = data.map(element => ({
+          id: element.id,
+          versionId: element.versionId,
+          lastUpdated: element.lastUpdated,
+          gender: element.gender,
+          birthDate: element.birthDate,
+          active: element.active,
+          name: element.name,
+          surname: element.surname,
+          address: element.address,
+          city: element.city
+
+        }));
         this.setState({
           isFetched: true,
-          allPatientIDs: json,
+          allPatients: this.allPatients,
         });
       })
       .catch(err => console.error(err));
   }
 
-  fetchPatient(){
-    for (var i =0;i<this.state.allPatientIDs.length;i++){
-      fetch(`http://localhost:8000/getPatient/?id=${this.allPatientIDs[i]}`)
-        .then(response => response.json())
-        .then(data =>{
-          
-        })
-    }
-  }
-
   render() {
 
-    var { isFetched, allPatientIDs } = this.state;
+    var { isFetched } = this.state;
 
     if (!isFetched) {
       return (
-      <div className="App"> <p>Loading...</p>
-      <img src={logo} className="App-logo" alt="logo"/>
-      </div>
-      
+        <div className="App"> <p>Loading...</p>
+          <img src={logo} className="App-logo" alt="logo" />
+        </div>
+
       );
     }
     else {
 
       return (
         <div className="App">
-            <ul>
-              {allPatientIDs.map(item =>(
-                  <div key={item}>
-                  {item} 
-                    </div>
-              ))}
-            </ul>
+          <section className="section">
+            <List items={this.state.allPatients} />
+          </section>
         </div>
       );
     }
