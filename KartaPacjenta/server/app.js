@@ -55,8 +55,9 @@ class Patient {
 }
 
 class Observation {
-    constructor(id, text, subjectID, issuedDate, value, unit) {
+    constructor(id, versionId, text, subjectID, issuedDate, value, unit) {
         this.id = id;
+        this.versionId = versionId;
         this.text = text;
         this.subjectID = subjectID;
         this.issuedDate = issuedDate;
@@ -66,8 +67,9 @@ class Observation {
 }
 
 class MedicationStatement {
-    constructor(id, text, subjectID, dosageText, dosage, unit, status) {
+    constructor(id, versionId, text, subjectID, dosageText, dosage, unit, status) {
         this.id = id;
+        this.versionId = versionId;
         this.text = text;
         this.subjectID = subjectID;
         this.dosageText = dosageText;
@@ -78,42 +80,42 @@ class MedicationStatement {
 }
 
 class Medication {
-    constructor(id, code, display, status) {
+    constructor(id, versionId, code, display, status) {
         this.id = id;
+        this.versionId = versionId;
         this.code = code;
         this.display = display;
         this.status = status;
     }
 }
 
-async function getPatientData(id) {
-    // return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + '/_history/' + version);  // Pobieranie wybranej wersji (czy implementujemy?)
-    return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id);
+function getPatientData(id, version = 0) {
+    return rp('http://hapi.fhir.org/baseDstu3/Patient/' + id + (version > 0 ? '/_history/' + version : ''));
 }
 
-async function getObservationData(id) {
-    return rp('http://hapi.fhir.org/baseDstu3/Observation/' + id);
+function getObservationData(id, version = 0) {
+    return rp('http://hapi.fhir.org/baseDstu3/Observation/' + id + (version > 0 ? '/_history/' + version : ''));
 }
 
-async function getStatementData(id) {
-    return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id);
+function getStatementData(id, version = 0) {
+    return rp('http://hapi.fhir.org/baseDstu3/MedicationStatement/' + id + (version > 0 ? '/_history/' + version : ''));
 }
 
-async function getMedicationData(id) {
-    return rp('http://hapi.fhir.org/baseDstu3/Medication/' + id);
+function getMedicationData(id, version = 0) {
+    return rp('http://hapi.fhir.org/baseDstu3/Medication/' + id + (version > 0 ? '/_history/' + version : ''));
 }
 
 function validatePatient(id, res) {
     res = JSON.parse(res);
-    return new Patient(id, res.meta.versionId, res.meta.lastUpdated, res.gender ? res.gender : '',
-        res.birthDate ? res.birthDate : '', res.active ? res.active : '',
+    return new Patient(id, res.meta && res.meta.versionId ? res.meta.versionId : '', res.meta ? res.meta.lastUpdated : '',
+        res.gender ? res.gender : '', res.birthDate ? res.birthDate : '', res.active ? res.active : '',
         res.name && res.name[0] ? res.name[0].given[0] : '', res.name && res.name[0] ? res.name[0].family : '',
         res.address && res.address[0] ? res.address[0].text : '', res.address && res.address[0] ? res.address[0].city : '');
 }
 
 function validateObservation(id, res) {
     res = JSON.parse(res);
-    return new Observation(id, res.code && res.code.text ? res.code.text : '',
+    return new Observation(id, res.meta && res.meta.versionId ? res.meta.versionId : '', res.code && res.code.text ? res.code.text : '',
         res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
         res.issued, res.valueQuantity && res.valueQuantity.value ? res.valueQuantity.value : '',
         res.valueQuantity && res.valueQuantity.unit ? res.valueQuantity.unit : '');
@@ -121,7 +123,7 @@ function validateObservation(id, res) {
 
 function validateStatement(id, res) {
     res = JSON.parse(res);
-    return new MedicationStatement(id, res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
+    return new MedicationStatement(id, res.meta && res.meta.versionId ? res.meta.versionId : '', res.medicationCodeableConcept ? res.medicationCodeableConcept.text : '',
         res.subject && res.subject.reference ? res.subject.reference.replace('Patient/', '') : '',
         res.dosage[0] ? res.dosage[0].text : '', res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.value : '',
         res.dosage[0] && res.dosage[0].doseQuantity ? res.dosage[0].doseQuantity.unit : '', res.status);
@@ -129,31 +131,39 @@ function validateStatement(id, res) {
 
 function validateMedication(id, res) {
     res = JSON.parse(res);
-    return new Medication(id, res.code && res.code.coding[0] ? res.code.coding[0].code : '',
+    return new Medication(id, res.meta && res.meta.versionId ? res.meta.versionId : '', res.code && res.code.coding[0] ? res.code.coding[0].code : '',
         res.code && res.code.coding[0] ? res.code.coding[0].display : '', res.status);
 }
 
-async function getPatient(id) {
-    await getPatientData(id).then(res => patient = validatePatient(id, res));
-    console.log(`Patient ${id} retrieved from server successfully`);
+async function getPatient(id, version) {
+    await getPatientData(id, version).then(res => patient = validatePatient(id, res)).catch((err) => {
+        console.log(`No version ${version} found for patient ${id}`);
+        patient = { error: "No version found" }
+    });
     return [patient];
 }
 
-async function getObservation(id) {
-    await getObservationData(id).then(res => observation = validateObservation(id, res));
-    console.log(`Observation ${id} retrieved from server successfully`);
+async function getObservation(id, version) {
+    await getObservationData(id, version).then(res => observation = validateObservation(id, res)).catch((err) => {
+        console.log(`No version ${version} found for observation ${id}`);
+        observation = { error: "No version found" }
+    });
     return [observation];
 }
 
-async function getStatement(id) {
-    await getStatementData(id).then(res => stmt = validateStatement(id, res));
-    console.log(`Medication statement ${id} retrieved from server successfully`);
+async function getStatement(id, version) {
+    await getStatementData(id, version).then(res => stmt = validateStatement(id, res)).catch((err) => {
+        console.log(`No version ${version} found for statement ${id}`);
+        stmt = { error: "No version found" }
+    });
     return [stmt];
 }
 
-async function getMedication(id) {
-    await getMedicationData(id).then(res => medication = validateMedication(id, res));
-    console.log(`Medication ${id} retrieved from server successfully`);
+async function getMedication(id, version) {
+    await getMedicationData(id, version).then(res => medication = validateMedication(id, res)).catch((err) => {
+        console.log(`No version ${version} found for medication ${id}`);
+        medication = { error: "No version found" }
+    });
     return [medication];
 }
 
@@ -216,25 +226,25 @@ function getMedicatioPromises() {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/getPatient', (req, res) => getPatient(req.query.id).then(patient => res.json(patient)));
+app.get('/getPatient', (req, res) => getPatient(req.query.id, req.query.version ? req.query.version : 0).then(patient => res.json(patient)));
 
 app.get('/getPatientIDs', (req, res) => res.json(patientIDs));
 
 app.get('/getPatients', (req, res) => getPatientPromises().then(() => res.json(patients)));
 
-app.get('/getObservation', (req, res) => getObservation(req.query.id).then(observation => res.json(observation)));
+app.get('/getObservation', (req, res) => getObservation(req.query.id, req.query.version ? req.query.version : 0).then(observation => res.json(observation)));
 
 app.get('/getObservationIDs', (req, res) => res.json(observationIDs));
 
 app.get('/getObservations', (req, res) => getObservationPromises().then(() => res.json(observations)));
 
-app.get('/getStatement', (req, res) => getStatement(req.query.id).then(stmt => res.json(stmt)));
+app.get('/getStatement', (req, res) => getStatement(req.query.id, req.query.version ? req.query.version : 0).then(stmt => res.json(stmt)));
 
 app.get('/getStatementIDs', (req, res) => res.json(medicationStatementIDs));
 
 app.get('/getStatements', (req, res) => getStatementPromises().then(() => res.json(statements)));
 
-app.get('/getMedication', (req, res) => getMedication(req.query.id).then(medication => res.json(medication)));
+app.get('/getMedication', (req, res) => getMedication(req.query.id, req.query.version ? req.query.version : 0).then(medication => res.json(medication)));
 
 app.get('/getMedicationIDs', (req, res) => res.json(medicationIDs));
 
