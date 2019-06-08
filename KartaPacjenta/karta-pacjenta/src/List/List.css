@@ -1,11 +1,33 @@
 .input{
-    min-width: 15%;
-    width: 30%;
-    max-width: 30%;
-    border: 1px solid #999;
-    border-radius: 10px;
-    background-color: deepskyblue;
-    padding-inline-start: 10px;
     
+    width: 40%; 
+    height: 40px;
+    border: 1px solid #999;
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+    background-color: #7e9399;
+    padding-inline-start: 10px;
+    margin-top:10px;
+    color: white;    
 }
 
+::placeholder{
+    color: white;
+}
+
+.List{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.patientList{
+    padding: 10px;
+    font-size: 40px;
+}
+
+.patient{
+    margin-top:5px;
+    margin-bottom: 2.5px;
+    font-size:20px;
+}

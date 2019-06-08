@@ -1,0 +1,33 @@
+.detailBtn{
+    margin: 5px;
+    background-color: #7e9399;
+}
+
+.backBtn{
+    border-top-right-radius: 0px;
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 0px;
+    margin-top:10px;
+    height: 40px;
+    background-color: #7e9399;
+
+}
+
+.patientLine{
+    display:flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.details_page{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.title{
+    font-weight: bold;
+    font-size: 18px;
+    margin-right: 5px;
+}
