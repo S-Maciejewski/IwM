@@ -72,7 +72,7 @@ class List extends React.Component {
           id: element.id,
           text: element.text,
           subjectID: element.subjectID,
-          isssuedDate: element.isssuedDate,
+          issuedDate: element.issuedDate,
           value: element.value,
           unit: element.unit
 
@@ -218,7 +218,7 @@ class List extends React.Component {
           <div className="obsLine">
             <div className="title">
               {'Date : '}</div>
-            <div className="value"> {observation.isssuedDate}
+            <div className="value"> {observation.issuedDate}
             </div>
           </div>
 
@@ -385,15 +385,15 @@ class List extends React.Component {
             </div>
           </div>
           <div className="resourcesDetails">
-            <Button className="detailBtn" variant="secondary" id="obsBtn" onClick={this.showObservation}>Show observation</Button>
+            <Button className="detailBtn" variant="secondary" id="obsBtn" onClick={this.showObservation}>Observation</Button>
             {this.state.isObservation ? this.observationPage(this.id) : null}
           </div>
           <div className="resourcesDetails">
-            <Button className="detailBtn" variant="secondary" id="medBtn" onClick={this.showStatement}>Show statement</Button>
+            <Button className="detailBtn" variant="secondary" id="medBtn" onClick={this.showStatement}>Medication Statement</Button>
             {this.state.isStatement ? this.statementPage(this.id) : null}
           </div>
           <div className="resourcesDetails">
-            <Button className="detailBtn" variant="secondary" id="stateBtn" onClick={this.showMedication}>Show medication</Button>
+            <Button className="detailBtn" variant="secondary" id="stateBtn" onClick={this.showMedication}>Medication</Button>
             {this.state.isMedication ? this.medicationPage(this.id) : null}
           </div>
         </div>
