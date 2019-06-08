@@ -44,6 +44,8 @@ class List extends React.Component {
       filtered: this.props.items
     });
     this.fetchObservations();
+    this.fetchMedications();
+    this.fetchStatements();
 
   }
 
@@ -70,6 +72,7 @@ class List extends React.Component {
           id: element.id,
           text: element.text,
           subjectID: element.subjectID,
+          isssuedDate: element.isssuedDate,
           value: element.value,
           unit: element.unit
 
@@ -170,9 +173,9 @@ class List extends React.Component {
       id: 0,
       isDetails: false,
       isList: true,
-      isMedication:false,
-      isObservation:false,
-      isStatement:false,
+      isMedication: false,
+      isObservation: false,
+      isStatement: false,
     });
   }
 
@@ -204,13 +207,32 @@ class List extends React.Component {
     var observation = this.getObservation(this.state.id)
     if (observation) {
       return (
-        <div>
-          {observation.text}{' '}{observation.value}{' '}{observation.unit}
+        <div className="obsData">
+          <div className="obsLine">
+            <div className="title">
+              {'Observation: '} </div>
+            <div className="value">{observation.text}
+            </div>
+          </div>
+
+          <div className="obsLine">
+            <div className="title">
+              {'Date : '}</div>
+            <div className="value"> {observation.isssuedDate}
+            </div>
+          </div>
+
+          <div className="obsLine">
+            <div className="title">
+              {'Value: '} </div>
+            <div className="value">{observation.value}{' '}{observation.unit}
+            </div>
+          </div>
         </div>
       )
     } else {
       return (
-        <div>
+        <div className="emptyDetails">
           No observation
         </div>
       )
@@ -224,13 +246,48 @@ class List extends React.Component {
     var statement = this.getStatement(this.state.id)
     if (statement) {
       return (
-        <div>
-          {statement.id}{' '}{statement.text}{' '}{statement.unit}
+        <div className="stateData">
+          <div className="stateLine">
+            <div className="title">
+              {'Id: '} </div>
+            <div className="value">{statement.id}
+            </div>
+          </div>
+
+          <div className="stateLine">
+            <div className="title">
+              {'Medication Statement: '}</div>
+            <div className="value"> {statement.text}
+            </div>
+          </div>
+
+          <div className="stateLine">
+            <div className="title">
+              {'Dosage Description: '} </div>
+            <div className="value">{statement.dosageText}
+            </div>
+          </div>
+
+          <div className="stateLine">
+            <div className="title">
+              {'Dosage: '}
+            </div >
+            <div className="value">{statement.dosage}{' '}{statement.unit}
+            </div>
+          </div>
+
+          <div className="stateLine">
+            <div className="title">
+              {'Status: '}
+            </div >
+            <div className="value">{statement.status}
+            </div>
+          </div>
         </div>
       )
     } else {
       return (
-        <div>
+        <div className="emptyDetails">
           No medication statement
         </div>
       )
@@ -243,13 +300,40 @@ class List extends React.Component {
     var medication = this.getMedication(this.state.id)
     if (medication) {
       return (
-        <div>
-          {medication.id}{' '}{medication.code}{' '}{medication.display}
+        <div className="medicationData">
+          <div className="medicationLine">
+            <div className="title">
+              {'Medication id: '} </div>
+            <div className="value">{medication.id}
+            </div>
+          </div>
+
+          <div className="medicationLine">
+            <div className="title">
+              {'Medication Code: '}</div>
+            <div className="value"> {medication.code}
+            </div>
+          </div>
+
+          <div className="medicationLine">
+            <div className="title">
+              {'Medication: '} </div>
+            <div className="value">{medication.display}
+            </div>
+          </div>
+
+          <div className="medicationLine">
+            <div className="title">
+              {'Medication status: '}
+            </div >
+            <div className="value">{medication.active}
+            </div>
+          </div>
         </div>
       )
     } else {
       return (
-        <div>
+        <div className="emptyDetails">
           No medication
         </div>
       )
@@ -261,56 +345,61 @@ class List extends React.Component {
     var patient = this.getPatient(this.state.id);
     return (
       <div className="details_page">
-        <div className="Personal data">
-
+        <div className="personalData">
+          <div className="personalHeader">
+            Patient details:
+          </div>
           <div className="patientLine">
             <div className="title">
-            {'Patient: '} </div>
+              {'Patient: '} </div>
             <div className="value">{patient.name} {' '}{patient.surname}
             </div>
           </div>
 
           <div className="patientLine">
-          <div className="title">
-            {'Gender: '}</div>
+            <div className="title">
+              {'Gender: '}</div>
             <div className="value"> {patient.gender}
             </div>
           </div>
 
           <div className="patientLine">
-          <div  className="title">
-            {'Birth Date: '} </div>
+            <div className="title">
+              {'Birth Date: '} </div>
             <div className="value">{patient.birthDate}
-          </div>
+            </div>
           </div>
 
           <div className="patientLine">
-          <div className="title">
-            {'Status: '}
-          </div >
+            <div className="title">
+              {'Status: '}
+            </div >
             <div className="value">{patient.active ? 'Active' : 'Not active'}
-          </div>
+            </div>
           </div>
 
           <div className="patientLine">
-          <div className="title">
-            {'Address: '}</div>
+            <div className="title">
+              {'Address: '}</div>
             <div className="value">  {patient.address} {(patient.address === "") ? '' : ', '} {patient.city}
+            </div>
           </div>
+          <div className="resourcesDetails">
+            <Button className="detailBtn" variant="secondary" id="obsBtn" onClick={this.showObservation}>Show observation</Button>
+            {this.state.isObservation ? this.observationPage(this.id) : null}
           </div>
-
-          <Button className = "detailBtn" variant="secondary" id="obsBtn" onClick={this.showObservation}>Show observation</Button>
-
-          <Button className = "detailBtn" variant="secondary" id="medBtn" onClick={this.showStatement}>Show statement</Button>
-
-          <Button className = "detailBtn" variant="secondary" id="stateBtn" onClick={this.showMedication}>Show medication</Button>
-          {this.state.isObservation ? this.observationPage(this.id) : null}
-          {this.state.isStatement ? this.statementPage(this.id) : null}
-          {this.state.isMedication ? this.medicationPage(this.id) : null}
+          <div className="resourcesDetails">
+            <Button className="detailBtn" variant="secondary" id="medBtn" onClick={this.showStatement}>Show statement</Button>
+            {this.state.isStatement ? this.statementPage(this.id) : null}
+          </div>
+          <div className="resourcesDetails">
+            <Button className="detailBtn" variant="secondary" id="stateBtn" onClick={this.showMedication}>Show medication</Button>
+            {this.state.isMedication ? this.medicationPage(this.id) : null}
+          </div>
         </div>
         <div>
-          
-          <Button size = "sm" className = "backBtn" onClick={this.showList} variant="secondary">Back to menu</Button>
+
+          <Button size="sm" className="backBtn" onClick={this.showList} variant="secondary">Back to menu</Button>
         </div>
       </div>
     )
@@ -318,16 +407,16 @@ class List extends React.Component {
 
   render() {
     var menuList = (<div className="List">
-      
-      <div className = "patientList">Lista pacjentów:
+
+      <div className="patientList">Lista pacjentów:
       <ul>
-        {this.state.filtered.map(item => (
-          <li className = "patient" key={item.id}>
-            {item.name}{" "}{item.surname}{" "}
-            <Button size="sm" onClick={() => this.showDetails(item.id)} className='listBtn' variant="info">Details</Button>
-          </li>
-        ))}
-      </ul>
+          {this.state.filtered.map(item => (
+            <li className="patient" key={item.id}>
+              {item.name}{" "}{item.surname}{" "}{item.id}{" "}
+              <Button size="sm" onClick={() => this.showDetails(item.id)} className='listBtn' variant="info">Details</Button>
+            </li>
+          ))}
+        </ul>
       </div>
       <input type="text" className="input" onChange={this.handleChange} placeholder="Search..." />
     </div>);

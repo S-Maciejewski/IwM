@@ -1,6 +1,15 @@
 .detailBtn{
-    margin: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 0px;
+    border-top-left-radius: 0px;
     background-color: #7e9399;
+    font-size:25px;
+    width: 230px;
+    padding:5px;
+    text-align: left;
 }
 
 .backBtn{
@@ -12,6 +21,18 @@
     height: 40px;
     background-color: #7e9399;
 
+}
+
+.personalHeader{
+    font-size: 25px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+    margin-top:10px;
+    background-color: #7e9399;
+    padding: 5px;
+    color: white;
+    width: 230px;
+    min-width: 160px;
 }
 
 .patientLine{
@@ -30,4 +51,9 @@
     font-weight: bold;
     font-size: 18px;
     margin-right: 5px;
+}
+
+.emptyDetails{
+    color: red;
+    font-size: 15px;
 }
