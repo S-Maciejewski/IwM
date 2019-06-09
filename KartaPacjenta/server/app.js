@@ -23,10 +23,10 @@ const observationIDs = [
     434055, // bez pacjenta
     295694, // pacjent 295670
     // OBSERWACJE WZORCOWEGO PACJENTA 1909448
-    1909478,
-    1955961,
-    1955962,
-    1955963,
+    1909478, // Ma 4 wersje
+    // 1955961,
+    // 1955962,
+    // 1955963,
 ]
 
 const medicationStatementIDs = [
