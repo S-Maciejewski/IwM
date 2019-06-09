@@ -12,22 +12,31 @@ const patientIDs = [
     1656311,
     1656316,
     // z obserwacjami
-    1909448, // obserwacja 1909478
     295670, // obserwacja 295694
     // z medication statementami
     1952851, // statement 1952915
+    // WZORCOWY PACJENT:
+    1909448,
 ]
 
 const observationIDs = [
-    1909478, // pacjent 1909448
     434055, // bez pacjenta
     295694, // pacjent 295670
+    // OBSERWACJE WZORCOWEGO PACJENTA 1909448
+    1909478,
+    1955961,
+    1955962,
+    1955963,
 ]
 
 const medicationStatementIDs = [
     1952915, // pacjent 1952851
     1952838,
     1952182,
+    // STATEMENTY WZOROWEGO PACJENTA 1909448
+    1955964,
+    1955965,
+    1955966,
 ]
 
 const medicationIDs = [
