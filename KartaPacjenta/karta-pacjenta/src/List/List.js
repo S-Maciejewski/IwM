@@ -5,6 +5,8 @@ import './Medication.css';
 import './Observation.css';
 import './Statement.css';
 import Button from 'react-bootstrap/Button';
+import Moment from 'react-moment';
+import Chart from 'react-google-charts';
 
 class List extends React.Component {
   constructor(props) {
@@ -13,20 +15,30 @@ class List extends React.Component {
     this.observations = [];
     this.medications = [];
     this.statements = [];
+    this.patObservations = [];
+    this.year1="";
+    this.year2="";
 
     this.state = {
       filtered: [],
+      obsFiltered: [],
+      time1:"2010-01-01",
+      time2:"2020-01-01",
       isDetails: false,
       isList: true,
       isObservation: false,
       isStatement: false,
       isMedication: false,
       id: 0,
+      patObserFetched: false,
+
     }
     this.id = 0;
-
+    
+    this.reDrawChart =this.reDrawChart.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.getPatient = this.getPatient.bind(this);
+    this.getAllObservation = this.getAllObservation.bind(this);
     this.showDetails = this.showDetails.bind(this);
     this.detailsPage = this.detailsPage.bind(this);
     this.showList = this.showList.bind(this);
@@ -36,7 +48,10 @@ class List extends React.Component {
     this.fetchMedications = this.fetchMedications.bind(this);
     this.fetchObservations = this.fetchObservations.bind(this);
     this.fetchStatements = this.fetchStatements.bind(this);
-
+    this.prepareData = this.prepareData.bind(this);
+    this.showChart = this.showChart.bind(this);
+    this.handleYear1 = this.handleYear1.bind(this);
+    this.handleYear2 = this.handleYear2.bind(this);
   }
 
   componentDidMount() {
@@ -46,6 +61,7 @@ class List extends React.Component {
     this.fetchObservations();
     this.fetchMedications();
     this.fetchStatements();
+
 
   }
 
@@ -70,17 +86,18 @@ class List extends React.Component {
       .then(data => {
         this.observations = data.map(element => ({
           id: element.id,
+          versionId: element.versionId,
           text: element.text,
           subjectID: element.subjectID,
-          issuedDate: element.issuedDate,
+          issuedDate: String(element.issuedDate).slice(0, 19),
           value: element.value,
-          unit: element.unit
-
+          unit: element.unit,
         }));
 
       })
       .catch(err => console.error(err));
   }
+
 
   fetchStatements() {
     fetch(`http://localhost:8000/getStatements`)
@@ -147,6 +164,36 @@ class List extends React.Component {
     })
   }
 
+  getAllObservation = async (id) => {
+    if (!this.state.patObserFetched) {
+      var temp = this.getObservation(id);
+      if (temp) {
+        var n = temp.versionId;
+        var obId = temp.id;
+      
+
+        for (var i = 1; i <= n; i++) {
+          
+          const response = await fetch(`http://localhost:8000/getObservation/?id=${obId}&version=${i}`);
+          const json = await response.json();
+          this.patObservations.push({
+            'versionId': json[0].versionId,
+            'issuedDate': String(json[0].issuedDate).slice(0, 19),
+            'value': json[0].value,
+            'unit': json[0].unit
+          });
+        }
+        this.setState({
+          patObserFetched: true,
+          obsFiltered: this.patObservations,
+        })
+      }
+    }
+
+
+  }
+
+
   getStatement(id) {
     return this.statements.find((element) => {
       return element.subjectID === String(id);
@@ -169,6 +216,7 @@ class List extends React.Component {
   }
 
   showList() {
+    this.patObservations = [];
     this.setState({
       id: 0,
       isDetails: false,
@@ -176,6 +224,9 @@ class List extends React.Component {
       isMedication: false,
       isObservation: false,
       isStatement: false,
+      patObserFetched: false,
+      time1:"2010-01-01",
+      time2:"2020-01-01",
     });
   }
 
@@ -183,6 +234,8 @@ class List extends React.Component {
   showObservation() {
     this.setState({
       isObservation: !this.state.isObservation,
+      time1:"2010-01-01",
+      time2:"2020-01-01",
     })
   }
 
@@ -199,12 +252,55 @@ class List extends React.Component {
     })
   }
 
+  prepareData() {
+    var temp = [['Year', 'Patient weight in Kg']];
+    var time1D= new Date(this.state.time1);
+    var time2D= new Date(this.state.time2);
+    console.log(time1D);
+    console.log(time2D);
+    for (var i = 0; i < this.state.obsFiltered.length; i++) {
+      var tempDate = new Date(this.state.obsFiltered[i].issuedDate);
+      if(tempDate.getTime()>=time1D.getTime()&&tempDate.getTime()<=time2D.getTime()){
+        temp.push([new Date(this.state.obsFiltered[i].issuedDate), parseFloat(this.state.obsFiltered[i].value.toFixed(2))]);
+      }
+    }
+    console.log(temp);
+    return temp;
+  }
 
+  showChart(charData){
+    return(<Chart
+      width={'800px'}
+      height={'400px'}
+
+      loader={<div>Loading Chart</div>}
+      chartType="Scatter"
+      data={charData}
+
+      options={{
+
+        hAxis: { title: 'Year', minValue: 2010, maxValue: 2020 },
+        vAxis: { title: 'Weight', minValue: 0, maxValue: 150 },
+        enableInteractivity: false,
+
+      }}
+    />
+    )
+    
+  }
+
+  reDrawChart(){
+    this.setState({
+      time1:this.year1,
+      time2:this.year2,
+    })
+  }
 
   observationPage() {
-    console.log(this.state.id);
-    console.log(this.state.isMedication);
-    var observation = this.getObservation(this.state.id)
+    this.getAllObservation(this.state.id);
+    var observation = this.getObservation(this.state.id);
+
+    var charData = this.prepareData();
     if (observation) {
       return (
         <div className="obsData">
@@ -218,8 +314,7 @@ class List extends React.Component {
           <div className="obsLine">
             <div className="title">
               {'Date : '}</div>
-            <div className="value"> {observation.issuedDate}
-            </div>
+            <Moment className="value" date={observation.issuedDate} />
           </div>
 
           <div className="obsLine">
@@ -227,6 +322,14 @@ class List extends React.Component {
               {'Value: '} </div>
             <div className="value">{observation.value}{' '}{observation.unit}
             </div>
+          </div>
+          <div className ="chart">
+            {this.showChart(charData)}
+          </div>
+          <div>
+          <input type="text" className="inputY1" onChange={this.handleYear1} placeholder="" />
+          <input type="text" className="inputY2" onChange={this.handleYear2} placeholder="" />
+          <button onClick={this.reDrawChart}>Apply</button>
           </div>
         </div>
       )
@@ -240,9 +343,21 @@ class List extends React.Component {
 
   }
 
+  handleYear1(e){
+    if (e.target.value !== "") {
+      this.year1 = e.target.value;
+       
+    } 
+  }
+
+  handleYear2(e){
+    if (e.target.value !== "") {
+      this.year2 = e.target.value;
+      
+  } 
+}
+
   statementPage() {
-    console.log(this.state.id);
-    console.log(this.statements);
     var statement = this.getStatement(this.state.id)
     if (statement) {
       return (
@@ -295,8 +410,6 @@ class List extends React.Component {
   }
 
   medicationPage() {
-    console.log(this.state.id);
-    console.log(this.medications);
     var medication = this.getMedication(this.state.id)
     if (medication) {
       return (
@@ -381,7 +494,7 @@ class List extends React.Component {
           <div className="patientLine">
             <div className="title">
               {'Address: '}</div>
-            <div className="value">  {patient.address} {(patient.address === "") ? '' : ', '} {patient.city}
+            <div className="value">  {patient.address} {(patient.address === "" || !patient.address) ? '' : ', '} {patient.city}
             </div>
           </div>
           <div className="resourcesDetails">

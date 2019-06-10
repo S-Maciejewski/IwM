@@ -21,6 +21,20 @@
     justify-content: space-between;
 }
 
+.inputY1{
+    margin:5px; 
+}
+
+.inputY2{
+    margin:5px; 
+}
+
+.chart{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
 .patientList{
     padding: 10px;
     font-size: 40px;
