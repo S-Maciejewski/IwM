@@ -16,14 +16,14 @@ class List extends React.Component {
     this.medications = [];
     this.statements = [];
     this.patObservations = [];
-    this.year1="";
-    this.year2="";
+    this.year1 = "";
+    this.year2 = "";
 
     this.state = {
       filtered: [],
       obsFiltered: [],
-      time1:"2010-01-01",
-      time2:"2020-01-01",
+      time1: "2010-01-01",
+      time2: "2020-01-01",
       isDetails: false,
       isList: true,
       isObservation: false,
@@ -34,8 +34,8 @@ class List extends React.Component {
 
     }
     this.id = 0;
-    
-    this.reDrawChart =this.reDrawChart.bind(this);
+
+    this.reDrawChart = this.reDrawChart.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.getPatient = this.getPatient.bind(this);
     this.getAllObservation = this.getAllObservation.bind(this);
@@ -52,6 +52,7 @@ class List extends React.Component {
     this.showChart = this.showChart.bind(this);
     this.handleYear1 = this.handleYear1.bind(this);
     this.handleYear2 = this.handleYear2.bind(this);
+    this.chartReg = this.chartReg.bind(this);
   }
 
   componentDidMount() {
@@ -170,10 +171,10 @@ class List extends React.Component {
       if (temp) {
         var n = temp.versionId;
         var obId = temp.id;
-      
+
 
         for (var i = 1; i <= n; i++) {
-          
+
           const response = await fetch(`http://localhost:8000/getObservation/?id=${obId}&version=${i}`);
           const json = await response.json();
           this.patObservations.push({
@@ -225,8 +226,8 @@ class List extends React.Component {
       isObservation: false,
       isStatement: false,
       patObserFetched: false,
-      time1:"2010-01-01",
-      time2:"2020-01-01",
+      time1: "2010-01-01",
+      time2: "2020-01-01",
     });
   }
 
@@ -234,8 +235,8 @@ class List extends React.Component {
   showObservation() {
     this.setState({
       isObservation: !this.state.isObservation,
-      time1:"2010-01-01",
-      time2:"2020-01-01",
+      time1: "2010-01-01",
+      time2: "2020-01-01",
     })
   }
 
@@ -254,13 +255,13 @@ class List extends React.Component {
 
   prepareData() {
     var temp = [['Year', 'Patient weight in Kg']];
-    var time1D= new Date(this.state.time1);
-    var time2D= new Date(this.state.time2);
+    var time1D = new Date(this.state.time1);
+    var time2D = new Date(this.state.time2);
     console.log(time1D);
     console.log(time2D);
     for (var i = 0; i < this.state.obsFiltered.length; i++) {
       var tempDate = new Date(this.state.obsFiltered[i].issuedDate);
-      if(tempDate.getTime()>=time1D.getTime()&&tempDate.getTime()<=time2D.getTime()){
+      if (tempDate.getTime() >= time1D.getTime() && tempDate.getTime() <= time2D.getTime()) {
         temp.push([new Date(this.state.obsFiltered[i].issuedDate), parseFloat(this.state.obsFiltered[i].value.toFixed(2))]);
       }
     }
@@ -268,8 +269,8 @@ class List extends React.Component {
     return temp;
   }
 
-  showChart(charData){
-    return(<Chart
+  showChart(charData) {
+    return (<Chart
       width={'800px'}
       height={'400px'}
 
@@ -286,14 +287,24 @@ class List extends React.Component {
       }}
     />
     )
-    
+
   }
 
-  reDrawChart(){
+  reDrawChart() {
     this.setState({
-      time1:this.year1,
-      time2:this.year2,
+      time1: this.year1,
+      time2: this.year2,
     })
+  }
+
+  chartReg() {
+    return (
+      <div>
+        <input type="text" className="inputY1" onChange={this.handleYear1} placeholder="" />
+        <input type="text" className="inputY2" onChange={this.handleYear2} placeholder="" />
+        <button onClick={this.reDrawChart}>Apply</button>
+      </div>
+    );
   }
 
   observationPage() {
@@ -323,14 +334,10 @@ class List extends React.Component {
             <div className="value">{observation.value}{' '}{observation.unit}
             </div>
           </div>
-          <div className ="chart">
-            {this.showChart(charData)}
+          <div className="chart">
+            {observation.issuedDate === "" ? this.showChart(charData) : 'No observation date, chart cannot be drawn'}
           </div>
-          <div>
-          <input type="text" className="inputY1" onChange={this.handleYear1} placeholder="" />
-          <input type="text" className="inputY2" onChange={this.handleYear2} placeholder="" />
-          <button onClick={this.reDrawChart}>Apply</button>
-          </div>
+          {observation.issuedDate === "" ? this.chartReg() : ''}
         </div>
       )
     } else {
@@ -343,19 +350,19 @@ class List extends React.Component {
 
   }
 
-  handleYear1(e){
+  handleYear1(e) {
     if (e.target.value !== "") {
       this.year1 = e.target.value;
-       
-    } 
+
+    }
   }
 
-  handleYear2(e){
+  handleYear2(e) {
     if (e.target.value !== "") {
       this.year2 = e.target.value;
-      
-  } 
-}
+
+    }
+  }
 
   statementPage() {
     var statement = this.getStatement(this.state.id)
